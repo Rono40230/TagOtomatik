@@ -1,0 +1,33 @@
+export interface Track {
+    path: string;
+    filename: string;
+    title: string;
+    artist: string;
+    album: string;
+    year?: number;
+    track_number?: number;
+    genre?: string;
+    duration_sec: number;
+    format: string;
+    bit_rate?: number;
+    has_cover: boolean;
+    is_modified: boolean;
+}
+
+export enum AlbumStatus {
+    Clean = "Clean",
+    Dirty = "Dirty",
+    Processing = "Processing",
+    Incomplete = "Incomplete",
+}
+
+export interface Album {
+    id: string;
+    path: string;
+    title: string;
+    artist: string;
+    year?: number;
+    cover_path?: string;
+    tracks: Track[];
+    status: AlbumStatus;
+}

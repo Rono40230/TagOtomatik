@@ -45,4 +45,4 @@ Ce fichier suit la progression du projet. Les tâches sont priorisées pour resp
 ## 🎨 Phase 8 : Polish & UX
 - [x] **Gestion Erreurs** : Afficher les erreurs Rust proprement dans l'UI (Toasts). <!-- id: 27 -->
 - [x] **Loading States** : Squelettes de chargement et spinners. <!-- id: 28 -->
-- [ ] **Audit Final** : Vérification complète avec `./scripts/full-code-audit.sh`. <!-- id: 29 -->
+- [x] **Audit Final** : Vérification complète avec `./scripts/full-code-audit.sh`. <!-- id: 29 -->

@@ -36,43 +36,43 @@ function goBack() {
 </script>
 
 <template>
-  <div class="container mx-auto p-6">
+  <div class="container mx-auto p-6 bg-gray-900 min-h-screen text-white">
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold text-gray-800">Gestion des Exceptions</h1>
-      <button @click="goBack" class="text-gray-600 hover:text-gray-900">
+      <h1 class="text-2xl font-bold text-white">Gestion des Exceptions</h1>
+      <button @click="goBack" class="text-gray-400 hover:text-white">
         &larr; Retour
       </button>
     </div>
 
     <!-- Formulaire d'ajout -->
-    <div class="bg-white rounded-lg shadow p-6 mb-8">
-      <h2 class="text-lg font-semibold mb-4">Ajouter une exception</h2>
+    <div class="bg-gray-800 rounded-lg shadow p-6 mb-8 border border-gray-700">
+      <h2 class="text-lg font-semibold mb-4 text-white">Ajouter une exception</h2>
       <form @submit.prevent="handleSubmit" class="flex flex-wrap gap-4 items-end">
         <div class="flex-1 min-w-[200px]">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Original (Incorrect)</label>
+          <label class="block text-sm font-medium text-gray-400 mb-1">Original (Incorrect)</label>
           <input 
             v-model="form.original"
             type="text" 
-            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
+            class="w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
             placeholder="ex: AC/DC"
           >
         </div>
         
         <div class="flex-1 min-w-[200px]">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Correction</label>
+          <label class="block text-sm font-medium text-gray-400 mb-1">Correction</label>
           <input 
             v-model="form.corrected"
             type="text" 
-            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
+            class="w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
             placeholder="ex: AC/DC"
           >
         </div>
 
         <div class="w-40">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+          <label class="block text-sm font-medium text-gray-400 mb-1">Catégorie</label>
           <select 
             v-model="form.category"
-            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
+            class="w-full rounded-md border-gray-600 bg-gray-700 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 border p-2"
           >
             <option value="global">Global</option>
             <option value="artist">Artiste</option>
@@ -91,40 +91,34 @@ function goBack() {
     </div>
 
     <!-- Liste des exceptions -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
+    <div class="bg-gray-800 rounded-lg shadow overflow-hidden border border-gray-700">
+      <table class="min-w-full divide-y divide-gray-700">
+        <thead class="bg-gray-900">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Original</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correction</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Original</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Correction</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Catégorie</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
+        <tbody class="bg-gray-800 divide-y divide-gray-700">
           <tr v-if="store.exceptions.length === 0">
             <td colspan="4" class="px-6 py-4 text-center text-gray-500">
               Aucune exception définie.
             </td>
           </tr>
           <tr v-for="ex in store.exceptions" :key="ex.id">
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ ex.original }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium text-green-600">{{ ex.corrected }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                :class="{
-                  'bg-blue-100 text-blue-800': ex.category === 'global',
-                  'bg-purple-100 text-purple-800': ex.category === 'artist',
-                  'bg-pink-100 text-pink-800': ex.category === 'album'
-                }"
-              >
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ ex.original }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ ex.corrected }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-700 text-gray-300">
                 {{ ex.category }}
               </span>
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
               <button 
-                @click="ex.id && store.supprimerException(ex.id)"
-                class="text-red-600 hover:text-red-900"
+                @click="store.supprimerException(ex.id)"
+                class="text-red-400 hover:text-red-300"
               >
                 Supprimer
               </button>

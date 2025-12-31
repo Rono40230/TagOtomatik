@@ -57,25 +57,25 @@ function goBack() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col">
+  <div class="min-h-screen bg-gray-900 flex flex-col text-white">
     <!-- Header -->
-    <header class="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
+    <header class="bg-gray-800 shadow-sm px-6 py-4 flex items-center justify-between border-b border-gray-700">
       <div class="flex items-center gap-4">
-        <button @click="goBack" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <button @click="goBack" class="p-2 hover:bg-gray-700 rounded-full transition-colors text-gray-300">
           ⬅️
         </button>
-        <h1 class="text-xl font-bold text-gray-900">Convertisseur MP3</h1>
+        <h1 class="text-xl font-bold text-white">Convertisseur MP3</h1>
       </div>
     </header>
 
     <main class="flex-1 max-w-4xl w-full mx-auto p-8">
-      <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+      <div class="bg-gray-800 rounded-xl shadow-lg p-8 text-center border border-gray-700">
         <div class="mb-8">
-          <div class="w-24 h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
+          <div class="w-24 h-24 bg-blue-900/30 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
             🔄
           </div>
-          <h2 class="text-2xl font-bold text-gray-800">Convertir en MP3 (320kbps)</h2>
-          <p class="text-gray-500 mt-2">Sélectionnez vos fichiers FLAC, WAV ou M4A</p>
+          <h2 class="text-2xl font-bold text-white">Convertir en MP3 (320kbps)</h2>
+          <p class="text-gray-400 mt-2">Sélectionnez vos fichiers FLAC, WAV ou M4A</p>
         </div>
 
         <button 
@@ -87,9 +87,9 @@ function goBack() {
         </button>
 
         <div v-if="files.length > 0" class="mt-8 text-left">
-          <h3 class="font-medium text-gray-700 mb-2">Fichiers sélectionnés ({{ files.length }})</h3>
-          <div class="bg-gray-50 rounded-lg p-4 max-h-60 overflow-y-auto border border-gray-200">
-            <div v-for="file in files" :key="file" class="text-sm text-gray-600 py-1 truncate">
+          <h3 class="font-medium text-gray-300 mb-2">Fichiers sélectionnés ({{ files.length }})</h3>
+          <div class="bg-gray-900 rounded-lg p-4 max-h-60 overflow-y-auto border border-gray-700">
+            <div v-for="file in files" :key="file" class="text-sm text-gray-400 py-1 truncate">
               {{ file }}
             </div>
           </div>
@@ -108,10 +108,10 @@ function goBack() {
 
         <!-- Progress Bar -->
         <div v-if="converting" class="mt-8">
-          <div class="w-full bg-gray-200 rounded-full h-2.5">
+          <div class="w-full bg-gray-700 rounded-full h-2.5">
             <div class="bg-green-600 h-2.5 rounded-full transition-all duration-300" :style="{ width: progress + '%' }"></div>
           </div>
-          <p class="text-sm text-gray-500 mt-2">{{ Math.round(progress) }}%</p>
+          <p class="text-sm text-gray-400 mt-2">{{ Math.round(progress) }}%</p>
         </div>
       </div>
     </main>

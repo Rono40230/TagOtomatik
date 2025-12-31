@@ -1,5 +1,5 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: mer. 31 déc. 2025 18:52:35 CET
+Date: mer. 31 déc. 2025 21:05:59 CET
 
 ## 📂 Arborescence (Backend)
 ```
@@ -40,6 +40,7 @@ Date: mer. 31 déc. 2025 18:52:35 CET
       playlist.rs
       processor.rs
       processor_tests.rs
+      renamer.rs
       scanner.rs
 ```
 
@@ -101,6 +102,7 @@ services/converter.rs:pub struct ConverterService;
 services/player.rs:pub enum PlayerCommand {
 services/player.rs:pub struct AudioPlayerState {
 services/cleaner.rs:pub struct CleanerService;
+services/renamer.rs:pub struct RenamerService;
 commands/cover.rs:pub struct CoverServiceState(pub Mutex<CoverService>);
 commands/playlist.rs:pub struct PlaylistServiceState(pub Mutex<PlaylistService>);
 commands/history.rs:pub fn get_scan_history(db: State<Database>) -> Result<Vec<String>, String> {

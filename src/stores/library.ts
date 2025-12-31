@@ -10,6 +10,7 @@ export const useLibraryStore = defineStore('library', () => {
     const isLoading = ref(false);
     const error = ref<string | null>(null);
     const toast = useToastStore();
+    const originalAlbums = ref<Map<string, Album>>(new Map());
 
     async function scanDirectory(path: string) {
         if (!path) return;
@@ -17,6 +18,7 @@ export const useLibraryStore = defineStore('library', () => {
         currentPath.value = path;
         isLoading.value = true;
         error.value = null;
+        originalAlbums.value.clear();
         
         try {
             const result = await invoke<Album[]>('scan_directory', { path });
@@ -45,11 +47,15 @@ export const useLibraryStore = defineStore('library', () => {
 
         isLoading.value = true;
         try {
-            // Clone to avoid direct mutation issues before result
+            // Save original state if not already saved
+            if (!originalAlbums.value.has(albumId)) {
+                originalAlbums.value.set(albumId, JSON.parse(JSON.stringify(albums.value[albumIndex])));
+            }
+
             const albumToCorrect = JSON.parse(JSON.stringify(albums.value[albumIndex]));
-            const correctedAlbum = await invoke<Album>('auto_correct_album', { album: albumToCorrect });
+            const correctedAlbum = await invoke<Album>('preview_auto_correct', { album: albumToCorrect });
             albums.value[albumIndex] = correctedAlbum;
-            toast.success('Auto-correction appliquée.');
+            toast.success('Prévisualisation de l\'auto-correction.');
         } catch (e: unknown) {
             const errMsg = e instanceof Error ? e.message : String(e);
             error.value = errMsg;
@@ -57,6 +63,42 @@ export const useLibraryStore = defineStore('library', () => {
         } finally {
             isLoading.value = false;
         }
+    }
+
+    async function applyAutoCorrect(albumId: string) {
+        const albumIndex = albums.value.findIndex(a => a.id === albumId);
+        if (albumIndex === -1) return;
+
+        isLoading.value = true;
+        try {
+            const albumToApply = JSON.parse(JSON.stringify(albums.value[albumIndex]));
+            const finalAlbum = await invoke<Album>('apply_auto_correct', { album: albumToApply });
+            albums.value[albumIndex] = finalAlbum;
+            originalAlbums.value.delete(albumId); // Clear backup
+            toast.success('Corrections appliquées avec succès.');
+        } catch (e: unknown) {
+            const errMsg = e instanceof Error ? e.message : String(e);
+            error.value = errMsg;
+            toast.error(`Erreur application: ${errMsg}`);
+        } finally {
+            isLoading.value = false;
+        }
+    }
+
+    function cancelAutoCorrect(albumId: string) {
+        const original = originalAlbums.value.get(albumId);
+        if (original) {
+            const albumIndex = albums.value.findIndex(a => a.id === albumId);
+            if (albumIndex !== -1) {
+                albums.value[albumIndex] = JSON.parse(JSON.stringify(original));
+                originalAlbums.value.delete(albumId);
+                toast.info('Auto-correction annulée.');
+            }
+        }
+    }
+
+    function hasPendingCorrection(albumId: string): boolean {
+        return originalAlbums.value.has(albumId);
     }
 
     async function saveAlbum(albumId: string) {
@@ -84,6 +126,9 @@ export const useLibraryStore = defineStore('library', () => {
         scanDirectory,
         getAlbumById,
         autoCorrectAlbum,
+        applyAutoCorrect,
+        cancelAutoCorrect,
+        hasPendingCorrection,
         saveAlbum
     };
 });

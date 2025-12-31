@@ -1,5 +1,5 @@
 use crate::models::Track;
-use crate::services::MetadataProcessorService;
+use crate::services::RenamerService;
 use std::fs;
 use std::path::Path;
 
@@ -21,7 +21,7 @@ impl CleanerService {
         &self,
         tracks: &mut [Track],
         album_path: &Path,
-        processor: &MetadataProcessorService,
+        renamer: &RenamerService,
     ) {
         for track in tracks {
             let current_path = Path::new(&track.path);
@@ -35,7 +35,7 @@ impl CleanerService {
                 .unwrap_or("mp3");
 
             let new_filename =
-                processor.format_track_filename(track.track_number, &track.title, extension);
+                renamer.format_track_filename(track.track_number, &track.title, extension);
 
             let target_path = album_path.join(&new_filename);
 

@@ -80,6 +80,18 @@ async function handleAutoCorrect() {
   }
 }
 
+async function handleApplyCorrection() {
+  if (album.value) {
+    await libraryStore.applyAutoCorrect(album.value.id);
+  }
+}
+
+function handleCancelCorrection() {
+  if (album.value) {
+    libraryStore.cancelAutoCorrect(album.value.id);
+  }
+}
+
 async function handleSave() {
   if (album.value) {
     await libraryStore.saveAlbum(album.value.id);
@@ -103,7 +115,7 @@ function playTrack(track: Track) {
 
     <!-- Header / Toolbar -->
     <header class="bg-gray-800 shadow-sm sticky top-0 z-20 border-b border-gray-700">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="w-full px-6 h-16 flex items-center justify-between">
         <div class="flex items-center gap-4">
           <button @click="goBack" class="p-2 hover:bg-gray-700 rounded-full transition-colors text-gray-300">
             ⬅️
@@ -115,26 +127,45 @@ function playTrack(track: Track) {
         </div>
         
         <div class="flex gap-2">
-          <button 
-            @click="handleAutoCorrect"
-            :disabled="libraryStore.isLoading"
-            class="px-4 py-2 bg-blue-900/50 text-blue-300 border border-blue-700 rounded-lg hover:bg-blue-900 font-medium text-sm transition-colors flex items-center gap-2"
-          >
-            ✨ Auto-Correction
-          </button>
-          <button 
-            @click="handleSave"
-            :disabled="libraryStore.isLoading"
-            class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 font-medium text-sm transition-colors shadow-sm disabled:opacity-50"
-          >
-            {{ libraryStore.isLoading ? '...' : '💾 Sauvegarder' }}
-          </button>
+          <template v-if="libraryStore.hasPendingCorrection(album.id)">
+            <div class="flex items-center gap-2 bg-yellow-900/30 px-3 py-1 rounded-lg border border-yellow-700/50 mr-2">
+              <span class="text-yellow-400 text-xs font-medium">Prévisualisation</span>
+              <button 
+                @click="handleApplyCorrection"
+                class="px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-500 transition-colors"
+              >
+                Appliquer
+              </button>
+              <button 
+                @click="handleCancelCorrection"
+                class="px-3 py-1.5 bg-red-600 text-white text-xs rounded hover:bg-red-500 transition-colors"
+              >
+                Annuler
+              </button>
+            </div>
+          </template>
+          <template v-else>
+            <button 
+              @click="handleAutoCorrect"
+              :disabled="libraryStore.isLoading"
+              class="px-4 py-2 bg-blue-900/50 text-blue-300 border border-blue-700 rounded-lg hover:bg-blue-900 font-medium text-sm transition-colors flex items-center gap-2"
+            >
+              ✨ Auto-Correction
+            </button>
+            <button 
+              @click="handleSave"
+              :disabled="libraryStore.isLoading"
+              class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 font-medium text-sm transition-colors shadow-sm disabled:opacity-50"
+            >
+              {{ libraryStore.isLoading ? '...' : '💾 Sauvegarder' }}
+            </button>
+          </template>
         </div>
       </div>
     </header>
 
     <!-- Content -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex gap-8">
+    <main class="flex-1 w-full mx-auto px-4 py-8 flex gap-8">
       
       <AlbumSidebar 
         :album="album"

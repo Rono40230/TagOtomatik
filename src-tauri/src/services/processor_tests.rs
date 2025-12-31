@@ -32,52 +32,52 @@ fn test_corriger_casse() {
 
 #[test]
 fn test_format_folder_name() {
-    let processor = MetadataProcessorService::new();
+    let renamer = RenamerService::new();
 
     assert_eq!(
-        processor.format_folder_name("Artist", "Album", Some(2020)),
+        renamer.format_folder_name("Artist", "Album", Some(2020)),
         "(2020) Album"
     );
     assert_eq!(
-        processor.format_folder_name("Artist", "Album", None),
+        renamer.format_folder_name("Artist", "Album", None),
         "Album"
     );
 
     // Artist Exception
     // Expect Sentence Case: "Live at river plate"
     assert_eq!(
-        processor.format_folder_name("AC/DC", "Live at River Plate", Some(2012)),
+        renamer.format_folder_name("AC/DC", "Live at River Plate", Some(2012)),
         "(2012) Live at river plate"
     );
 
     // If album contains artist name, preserve artist case
     // AC/DC -> AC-DC in folder name
     assert_eq!(
-        processor.format_folder_name("AC/DC", "The AC/DC Collection", Some(2000)),
+        renamer.format_folder_name("AC/DC", "The AC/DC Collection", Some(2000)),
         "(2000) The AC-DC collection"
     );
 }
 
 #[test]
 fn test_format_track_filename() {
-    let processor = MetadataProcessorService::new();
+    let renamer = RenamerService::new();
 
     assert_eq!(
-        processor.format_track_filename(Some(1), "Title", "mp3"),
-        "01. Title.mp3"
+        renamer.format_track_filename(Some(1), "Title", "mp3"),
+        "01 - Title.mp3"
     );
     assert_eq!(
-        processor.format_track_filename(Some(10), "Title", ".FLAC"),
-        "10. Title.FLAC"
+        renamer.format_track_filename(Some(10), "Title", ".FLAC"),
+        "10 - Title.FLAC"
     );
     assert_eq!(
-        processor.format_track_filename(None, "Title", "mp3"),
-        "00. Title.mp3"
+        renamer.format_track_filename(None, "Title", "mp3"),
+        "00 - Title.mp3"
     );
 
     // Sanitization
     assert_eq!(
-        processor.format_track_filename(Some(1), "Title/With/Slash", "mp3"),
-        "01. Title-With-Slash.mp3"
+        renamer.format_track_filename(Some(1), "Title/With/Slash", "mp3"),
+        "01 - Title-With-Slash.mp3"
     );
 }

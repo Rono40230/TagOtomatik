@@ -6,14 +6,14 @@ pub mod services;
 use commands::cover::CoverServiceState;
 use commands::playlist::PlaylistServiceState;
 use commands::{
-    add_exception, auto_correct_album,
+    add_exception, apply_auto_correct,
     converter::convert_file,
     cover::{download_cover, search_cover},
     delete_exception, get_exceptions,
     history::get_scan_history,
     player::{pause_track, play_track, resume_track, set_volume, stop_track},
     playlist::{add_to_playlist, create_playlist, get_playlist_tracks, list_playlists},
-    save_album_changes, scan_directory, scan_junk,
+    preview_auto_correct, save_album_changes, scan_directory, scan_junk,
 };
 use db::Database;
 use services::cover::CoverService;
@@ -46,7 +46,8 @@ pub fn run() {
             greet,
             scan_directory,
             scan_junk,
-            auto_correct_album,
+            preview_auto_correct,
+            apply_auto_correct,
             add_exception,
             get_exceptions,
             delete_exception,

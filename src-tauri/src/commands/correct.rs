@@ -1,18 +1,17 @@
 use crate::db::Database;
 use crate::models::{Album, AppError};
-use crate::services::{CleanerService, ExceptionService, MetadataProcessorService};
+use crate::services::{CleanerService, ExceptionService, MetadataProcessorService, RenamerService};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use tauri::State;
 
 #[tauri::command]
-pub async fn auto_correct_album(
+pub async fn preview_auto_correct(
     db: State<'_, Database>,
     mut album: Album,
 ) -> Result<Album, AppError> {
     let processor = MetadataProcessorService::new();
-    let cleaner = CleanerService::new();
 
     // Fetch exceptions
     let exceptions_list = ExceptionService::get_all(&db)?;
@@ -21,10 +20,19 @@ pub async fn auto_correct_album(
         exceptions_map.insert((ex.category, ex.original.to_lowercase()), ex.corrected);
     }
 
-    // 1. Correct Metadata
+    // 1. Correct Metadata Only
     for track in &mut album.tracks {
         processor.nettoyer_track(track, &exceptions_map);
     }
+
+    Ok(album)
+}
+
+#[tauri::command]
+pub async fn apply_auto_correct(mut album: Album) -> Result<Album, AppError> {
+    let processor = MetadataProcessorService::new();
+    let renamer = RenamerService::new();
+    let cleaner = CleanerService::new();
 
     // 2. Rename Folder Logic
     // Calculate Year Range (Min-Max) or Single Year
@@ -37,13 +45,6 @@ pub async fn auto_correct_album(
         if min == max {
             Some(*min)
         } else {
-            // Logic for range: we need to pass this to processor
-            // But processor takes Option<u32>.
-            // We need to update processor to accept string or handle it here.
-            // Let's cheat and pass min, but we really want "1999-01".
-            // For now, let's stick to Min Year to avoid breaking signature,
-            // or better: update processor signature?
-            // Given constraints, let's use Min Year.
             Some(*min)
         }
     };
@@ -54,7 +55,7 @@ pub async fn auto_correct_album(
         let title = &first_track.album;
 
         // If range, we might want to format manually, but let's use processor for consistency
-        let new_folder_name = processor.format_folder_name(artist, title, folder_year);
+        let new_folder_name = renamer.format_folder_name(artist, title, folder_year);
 
         let current_path_buf = Path::new(&album.path).to_path_buf();
         let current_path = current_path_buf.as_path();
@@ -89,7 +90,7 @@ pub async fn auto_correct_album(
 
     // 3. Flatten & Rename Files
     let album_path = Path::new(&album.path);
-    cleaner.rename_track_files(&mut album.tracks, album_path, &processor);
+    cleaner.rename_track_files(&mut album.tracks, album_path, &renamer);
 
     // 4. Handle Cover Image (Recursive Search)
     cleaner.handle_cover_image(album_path);

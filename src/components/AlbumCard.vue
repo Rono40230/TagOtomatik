@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Album } from '../types';
-import { computed, ref, onMounted, watch } from 'vue';
+import { computed, ref, onMounted, watch, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { readFile } from '@tauri-apps/plugin-fs';
 
@@ -18,16 +18,25 @@ async function loadCover() {
   }
 
   try {
+    // Fallback to readFile because convertFileSrc is causing issues with special chars/permissions
     const contents = await readFile(props.album.cover_path);
     const blob = new Blob([contents]);
-    coverUrl.value = URL.createObjectURL(blob);
-  } catch {
+    const url = URL.createObjectURL(blob);
+    
+    // Revoke previous URL if exists
+    if (coverUrl.value) URL.revokeObjectURL(coverUrl.value);
+    
+    coverUrl.value = url;
+  } catch (e) {
     coverUrl.value = null;
   }
 }
 
 onMounted(loadCover);
 watch(() => props.album.cover_path, loadCover);
+onUnmounted(() => {
+  if (coverUrl.value) URL.revokeObjectURL(coverUrl.value);
+});
 
 const statusColor = computed(() => {
   switch (props.album.status) {

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { Album } from '../types';
-import { ref, onMounted, watch } from 'vue';
-import { readFile } from '@tauri-apps/plugin-fs';
+import { computed, ref, onMounted, watch, onUnmounted } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
+import { readFile } from '@tauri-apps/plugin-fs';
 
 const props = defineProps<{
   album: Album
@@ -28,8 +28,11 @@ async function loadCover() {
   try {
     const contents = await readFile(props.album.cover_path);
     const blob = new Blob([contents]);
-    coverUrl.value = URL.createObjectURL(blob);
-  } catch {
+    const url = URL.createObjectURL(blob);
+    
+    if (coverUrl.value) URL.revokeObjectURL(coverUrl.value);
+    coverUrl.value = url;
+  } catch (e) {
     coverUrl.value = null;
   }
 }
@@ -48,6 +51,9 @@ onMounted(() => {
   checkJunkFiles();
 });
 watch(() => props.album.cover_path, loadCover);
+onUnmounted(() => {
+  if (coverUrl.value) URL.revokeObjectURL(coverUrl.value);
+});
 watch(() => props.album.path, checkJunkFiles);
 
 const GENRES = [
@@ -60,9 +66,9 @@ const GENRES = [
 </script>
 
 <template>
-  <aside class="w-64 flex-shrink-0">
-    <div class="bg-gray-800 rounded-lg shadow p-4 sticky top-24 border border-gray-700">
-      <div class="aspect-square bg-gray-700 rounded-md mb-4 overflow-hidden relative group">
+  <aside class="w-96 flex-shrink-0">
+    <div class="bg-gray-800 rounded-lg shadow p-6 sticky top-24 border border-gray-700">
+      <div class="aspect-square bg-gray-700 rounded-md mb-6 overflow-hidden relative group shadow-lg">
           <img v-if="coverUrl" :src="coverUrl" class="w-full h-full object-cover" />
           <div v-else class="w-full h-full flex items-center justify-center text-6xl text-gray-500">🎵</div>
           
@@ -77,51 +83,53 @@ const GENRES = [
           </div>
       </div>
       
-      <div class="space-y-3">
+      <div class="space-y-4">
         <div>
-          <label class="block text-xs font-medium text-gray-400 uppercase">Album</label>
+          <label class="block text-xs font-medium text-gray-400 uppercase mb-1">Album</label>
           <input 
             :value="album.title"
             @input="$emit('update:title', ($event.target as HTMLInputElement).value)"
-            class="w-full mt-1 p-2 border border-gray-600 rounded text-sm font-semibold bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+            class="w-full h-10 p-2.5 border border-gray-600 rounded-lg text-base font-semibold bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" 
           />
         </div>
         <div>
-          <label class="block text-xs font-medium text-gray-400 uppercase">Artiste Album</label>
+          <label class="block text-xs font-medium text-gray-400 uppercase mb-1">Artiste Album</label>
           <input 
             :value="album.artist"
             @input="$emit('update:artist', ($event.target as HTMLInputElement).value)"
-            class="w-full mt-1 p-2 border border-gray-600 rounded text-sm bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+            class="w-full h-10 p-2.5 border border-gray-600 rounded-lg text-sm bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" 
           />
         </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-400 uppercase">Année</label>
-          <input 
-            :value="album.year"
-            @input="$emit('update:year', Number(($event.target as HTMLInputElement).value))"
-            type="number" 
-            class="w-full mt-1 p-2 border border-gray-600 rounded text-sm bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
-          />
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-gray-400 uppercase">Genre</label>
-          <select 
-            :value="album.tracks[0]?.genre || ''"
-            @change="$emit('update:genre', ($event.target as HTMLSelectElement).value)"
-            class="w-full mt-1 p-2 border border-gray-600 rounded text-sm bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="">Sélectionner...</option>
-            <option v-for="genre in GENRES" :key="genre" :value="genre">{{ genre }}</option>
-          </select>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-400 uppercase mb-1">Année</label>
+              <input 
+                :value="album.year"
+                @input="$emit('update:year', Number(($event.target as HTMLInputElement).value))"
+                type="number" 
+                class="w-full h-10 p-2.5 border border-gray-600 rounded-lg text-sm bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" 
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 uppercase mb-1">Genre</label>
+              <select 
+                :value="album.tracks[0]?.genre || ''"
+                @change="$emit('update:genre', ($event.target as HTMLSelectElement).value)"
+                class="w-full h-10 p-2.5 border border-gray-600 rounded-lg text-sm bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+              >
+                <option value="">Sélectionner...</option>
+                <option v-for="genre in GENRES" :key="genre" :value="genre">{{ genre }}</option>
+              </select>
+            </div>
         </div>
 
         <!-- Junk Files Notification -->
-        <div v-if="junkFiles.length > 0" class="mt-4 p-3 bg-red-900/50 border border-red-700 rounded-md">
-          <div class="flex items-center gap-2 text-red-200 mb-2">
-            <span class="text-xl">🗑️</span>
+        <div v-if="junkFiles.length > 0" class="mt-6 p-4 bg-red-900/30 border border-red-800/50 rounded-lg">
+          <div class="flex items-center gap-2 text-red-300 mb-2">
+            <span class="text-lg">🗑️</span>
             <span class="font-medium text-sm">Fichiers inutiles détectés</span>
           </div>
-          <ul class="text-xs text-red-300 list-disc list-inside">
+          <ul class="text-xs text-red-400/80 list-disc list-inside space-y-1">
             <li v-for="file in junkFiles" :key="file" class="truncate">{{ file }}</li>
           </ul>
         </div>

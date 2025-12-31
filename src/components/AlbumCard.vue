@@ -31,11 +31,11 @@ watch(() => props.album.cover_path, loadCover);
 
 const statusColor = computed(() => {
   switch (props.album.status) {
-    case 'Clean': return 'bg-green-100 text-green-800';
-    case 'Dirty': return 'bg-yellow-100 text-yellow-800';
-    case 'Incomplete': return 'bg-red-100 text-red-800';
-    case 'Processing': return 'bg-blue-100 text-blue-800';
-    default: return 'bg-gray-100 text-gray-800';
+    case 'Clean': return 'bg-green-900 text-green-200';
+    case 'Dirty': return 'bg-yellow-900 text-yellow-200';
+    case 'Incomplete': return 'bg-red-900 text-red-200';
+    case 'Processing': return 'bg-blue-900 text-blue-200';
+    default: return 'bg-gray-700 text-gray-300';
   }
 });
 
@@ -52,11 +52,11 @@ function openDetail() {
 <template>
   <div 
     @click="openDetail"
-    class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer border border-gray-200"
+    class="bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer border border-gray-700"
   >
-    <div class="aspect-square bg-gray-200 flex items-center justify-center relative">
+    <div class="aspect-square bg-gray-700 flex items-center justify-center relative">
       <img v-if="coverUrl" :src="coverUrl" alt="Cover" class="w-full h-full object-cover" />
-      <div v-else class="flex flex-col items-center justify-center text-gray-500 h-full w-full">
+      <div v-else class="flex flex-col items-center justify-center text-gray-400 h-full w-full">
         <span class="text-sm font-medium">Cover absente</span>
       </div>
       
@@ -68,12 +68,12 @@ function openDetail() {
     </div>
     
     <div class="p-4">
-      <h3 class="font-bold text-lg truncate text-black" :title="album.title">{{ album.title || 'Sans titre' }}</h3>
-      <p class="text-gray-600 truncate" :title="album.artist">{{ album.artist || 'Artiste inconnu' }}</p>
+      <h3 class="font-bold text-lg truncate text-white" :title="album.title">{{ album.title || 'Sans titre' }}</h3>
+      <p class="text-gray-300 truncate" :title="album.artist">{{ album.artist || 'Artiste inconnu' }}</p>
       
-      <div class="mt-3 flex justify-between items-center text-xs text-gray-500">
+      <div class="mt-3 flex justify-between items-center text-xs text-gray-400">
         <span>{{ album.year || '????' }}</span>
-        <span class="bg-gray-100 px-2 py-0.5 rounded">{{ formatBadge }}</span>
+        <span class="bg-gray-700 px-2 py-0.5 rounded">{{ formatBadge }}</span>
         <span>{{ album.tracks.length }} pistes</span>
       </div>
     </div>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useExceptionStore } from '../stores/exceptions'
+import { useExceptionsStore } from '../stores/exceptions'
 import { useRouter } from 'vue-router'
 
-const store = useExceptionStore()
+const store = useExceptionsStore()
 const router = useRouter()
 
 const form = ref({

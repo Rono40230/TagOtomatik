@@ -6,6 +6,7 @@ import { useToastStore } from './toast';
 
 export const useLibraryStore = defineStore('library', () => {
     const albums = ref<Album[]>([]);
+    const currentPath = ref<string>('');
     const isLoading = ref(false);
     const error = ref<string | null>(null);
     const toast = useToastStore();
@@ -13,6 +14,7 @@ export const useLibraryStore = defineStore('library', () => {
     async function scanDirectory(path: string) {
         if (!path) return;
         
+        currentPath.value = path;
         isLoading.value = true;
         error.value = null;
         
@@ -77,8 +79,7 @@ export const useLibraryStore = defineStore('library', () => {
     }
 
     return {
-        albums,
-        isLoading,
+        albums,        currentPath,        isLoading,
         error,
         scanDirectory,
         getAlbumById,

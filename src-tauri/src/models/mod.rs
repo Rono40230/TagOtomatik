@@ -1,6 +1,7 @@
 pub mod album;
 pub mod error;
 pub mod exception;
+pub mod playlist;
 pub mod track;
 
 pub use album::{Album, AlbumStatus};

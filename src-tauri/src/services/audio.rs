@@ -1,3 +1,4 @@
+use lofty::ItemKey;
 use lofty::{Accessor, AudioFile, ParseOptions, Probe, TagExt, TaggedFileExt};
 use std::path::Path;
 
@@ -48,9 +49,14 @@ impl AudioService {
         if let Some(tag) = tag {
             track.title = tag.title().unwrap_or_default().to_string();
             track.artist = tag.artist().unwrap_or_default().to_string();
+            track.album_artist = tag
+                .get_string(&ItemKey::AlbumArtist)
+                .unwrap_or_default()
+                .to_string();
             track.album = tag.album().unwrap_or_default().to_string();
             track.year = tag.year();
             track.track_number = tag.track();
+            track.genre = tag.genre().map(|s| s.to_string());
         }
 
         // Sauvegarder les métadonnées originales pour la comparaison
@@ -79,6 +85,10 @@ impl AudioService {
         tag.set_title(track.title.clone());
         tag.set_artist(track.artist.clone());
         tag.set_album(track.album.clone());
+        tag.insert_text(ItemKey::AlbumArtist, track.album_artist.clone());
+        if let Some(ref genre) = track.genre {
+            tag.set_genre(genre.clone());
+        }
 
         tag.save_to_path(path)
             .map_err(|e| AppError::Audio(format!("Erreur d'écriture: {}", e)))?;

@@ -6,6 +6,7 @@ pub struct Track {
     pub filename: String, // Nom de fichier
     pub title: String,
     pub artist: String,
+    pub album_artist: String,
     pub album: String,
     pub year: Option<u32>,
     pub track_number: Option<u32>,
@@ -27,6 +28,7 @@ impl Track {
             filename,
             title: String::new(),
             artist: String::new(),
+            album_artist: String::new(),
             album: String::new(),
             year: None,
             track_number: None,

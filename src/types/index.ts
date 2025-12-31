@@ -3,6 +3,7 @@ export interface Track {
     filename: string;
     title: string;
     artist: string;
+    album_artist: string;
     album: string;
     year?: number;
     track_number?: number;
@@ -12,6 +13,7 @@ export interface Track {
     bit_rate?: number;
     has_cover: boolean;
     is_modified: boolean;
+    original_metadata?: Track;
 }
 
 export enum AlbumStatus {

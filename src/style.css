@@ -1,3 +1,58 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  
+  /* Palette personnalisée sombre */
+  --color-app-bg: #0f172a;       /* Slate 950 */
+  --color-app-surface: #1e293b;  /* Slate 800 */
+  --color-app-surface-hover: #334155; /* Slate 700 */
+  --color-app-border: #334155;
+  
+  --color-primary: #6366f1;      /* Indigo 500 */
+  --color-primary-hover: #4f46e5; /* Indigo 600 */
+}
+
+:root {
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  background-color: var(--color-app-bg);
+  color: #f8fafc; /* Slate 50 */
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow: hidden; /* Pour éviter le scroll global, on scrollera les zones */
+}
+
+/* Scrollbar personnalisée */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Animations */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}

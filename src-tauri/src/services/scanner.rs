@@ -63,8 +63,6 @@ impl ScannerService {
                                         album.artist = track.artist.clone();
                                     }
                                     album.year = track.year;
-                                    // Chercher une cover dans le dossier (simplifié, on pourrait scanner les fichiers images)
-                                    // album.cover_path = ...
                                 }
 
                                 album.tracks.push(track);
@@ -84,6 +82,9 @@ impl ScannerService {
 
         // Mettre à jour le statut des albums
         for album in &mut albums {
+            // Chercher la cover
+            album.cover_path = Self::find_cover_image(Path::new(&album.path));
+
             if album.tracks.is_empty() {
                 album.status = AlbumStatus::Incomplete;
             } else {
@@ -98,5 +99,73 @@ impl ScannerService {
         }
 
         Ok(albums)
+    }
+
+    pub fn detecter_fichiers_inutiles(
+        &self,
+        chemin_dossier: &str,
+    ) -> Result<Vec<String>, AppError> {
+        let mut junk_files = Vec::new();
+        let whitelist_ext = ["mp3", "flac", "ogg", "m4a", "wav", "jpg", "jpeg", "png"];
+
+        let path = Path::new(chemin_dossier);
+        if !path.exists() || !path.is_dir() {
+            return Err(AppError::Validation("Dossier invalide".to_string()));
+        }
+
+        for entry in std::fs::read_dir(path).map_err(|e| AppError::Io(e.to_string()))? {
+            let entry = entry.map_err(|e| AppError::Io(e.to_string()))?;
+            let path = entry.path();
+            if path.is_file() {
+                let is_whitelisted = if let Some(ext) = path.extension() {
+                    let ext_str = ext.to_string_lossy().to_lowercase();
+                    whitelist_ext.contains(&ext_str.as_str())
+                } else {
+                    false
+                };
+
+                if !is_whitelisted {
+                    junk_files.push(
+                        path.file_name()
+                            .unwrap_or_default()
+                            .to_string_lossy()
+                            .to_string(),
+                    );
+                }
+            }
+        }
+        Ok(junk_files)
+    }
+
+    fn find_cover_image(path: &Path) -> Option<String> {
+        let extensions = ["jpg", "jpeg", "png", "bmp", "webp"];
+        let common_names = ["cover", "folder", "front", "album"];
+
+        // 1. Check for common names first
+        for name in common_names {
+            for ext in extensions {
+                let p = path.join(format!("{}.{}", name, ext));
+                if p.exists() {
+                    return Some(p.to_string_lossy().to_string());
+                }
+            }
+        }
+
+        // 2. If not found, scan directory for any image
+        if let Ok(entries) = std::fs::read_dir(path) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.is_file() {
+                    if let Some(ext) = p.extension() {
+                        let ext_str = ext.to_string_lossy().to_lowercase();
+                        if extensions.contains(&ext_str.as_str()) {
+                            return Some(p.to_string_lossy().to_string());
+                        }
+                    }
+                }
+            }
+        }
+
+        None
     }
 }

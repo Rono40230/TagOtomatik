@@ -10,7 +10,7 @@ export interface CaseException {
   category: 'artist' | 'album' | 'global'
 }
 
-export const useExceptionStore = defineStore('exceptions', () => {
+export const useExceptionsStore = defineStore('exceptions', () => {
   const exceptions = ref<CaseException[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)

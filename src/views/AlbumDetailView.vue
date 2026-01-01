@@ -7,9 +7,10 @@ import { usePlayerStore } from '../stores/player';
 import { usePlaylistStore } from '../stores/playlist';
 import { useToastStore } from '../stores/toast';
 import CoverSearchModal from '../components/CoverSearchModal.vue';
-import AlbumSidebar from '../components/AlbumSidebar.vue';
-import TrackList from '../components/TrackList.vue';
-import type { Track } from '../types';
+import AlbumEditor from '../components/AlbumEditor.vue';
+import MultiAlbumEditor from '../components/MultiAlbumEditor.vue';
+import AlbumDetailToolbar from '../components/AlbumDetailToolbar.vue';
+import type { Track, Album } from '../types';
 
 const route = useRoute();
 const router = useRouter();
@@ -18,16 +19,24 @@ const playerStore = usePlayerStore();
 const playlistStore = usePlaylistStore();
 const toastStore = useToastStore();
 
-const albumId = route.params.id as string;
-const album = computed(() => libraryStore.getAlbumById(albumId));
+const albums = computed(() => {
+  if (route.name === 'MultiAlbumEdit') {
+    const ids = (route.query.ids as string)?.split(',') || [];
+    return ids.map(id => libraryStore.getAlbumById(id)).filter((a): a is Album => !!a);
+  } else {
+    const a = libraryStore.getAlbumById(route.params.id as string);
+    return a ? [a] : [];
+  }
+});
 
 const showPlaylistModal = ref(false);
 const showCoverModal = ref(false);
 const selectedTrackForPlaylist = ref<string | null>(null);
+const activeAlbumForCover = ref<Album | null>(null);
 
-// Si l'album n'existe pas (refresh page), retour à la bibliothèque
+// Si aucun album trouvé, retour
 onMounted(() => {
-  if (!album.value) {
+  if (albums.value.length === 0) {
     router.push('/library');
   }
   if (libraryStore.currentPath) {
@@ -40,6 +49,11 @@ function openPlaylistModal(trackPath: string) {
   showPlaylistModal.value = true;
 }
 
+function openCoverModal(album: Album) {
+  activeAlbumForCover.value = album;
+  showCoverModal.value = true;
+}
+
 async function addTrackToPlaylist(playlistPath: string) {
   if (selectedTrackForPlaylist.value) {
     await playlistStore.addToPlaylist(playlistPath, [selectedTrackForPlaylist.value]);
@@ -49,53 +63,33 @@ async function addTrackToPlaylist(playlistPath: string) {
 }
 
 async function handleCoverSelect(url: string) {
-  if (!album.value) return;
+  if (!activeAlbumForCover.value) return;
+  
+  const targetAlbum = activeAlbumForCover.value; // Capture ref
   
   try {
     libraryStore.isLoading = true;
     const localPath = await invoke<string>('download_cover', { 
       url, 
-      albumPath: album.value.path 
+      albumPath: targetAlbum.path 
     });
     
     // Update local state
-    album.value.cover_path = localPath;
+    targetAlbum.cover_path = localPath;
     // Force image refresh hack
-    album.value.cover_path = `${localPath}?t=${Date.now()}`;
+    targetAlbum.cover_path = `${localPath}?t=${Date.now()}`;
     
   } catch (e) {
     toastStore.error(String(e));
   } finally {
     libraryStore.isLoading = false;
+    showCoverModal.value = false;
+    activeAlbumForCover.value = null;
   }
 }
 
 function goBack() {
   router.push('/library');
-}
-
-async function handleAutoCorrect() {
-  if (album.value) {
-    await libraryStore.autoCorrectAlbum(album.value.id);
-  }
-}
-
-async function handleApplyCorrection() {
-  if (album.value) {
-    await libraryStore.applyAutoCorrect(album.value.id);
-  }
-}
-
-function handleCancelCorrection() {
-  if (album.value) {
-    libraryStore.cancelAutoCorrect(album.value.id);
-  }
-}
-
-async function handleSave() {
-  if (album.value) {
-    await libraryStore.saveAlbum(album.value.id);
-  }
 }
 
 function playTrack(track: Track) {
@@ -104,7 +98,7 @@ function playTrack(track: Track) {
 </script>
 
 <template>
-  <div v-if="album" class="min-h-screen bg-gray-900 text-white flex flex-col">
+  <div class="h-screen overflow-hidden bg-gray-900 text-white flex flex-col">
     <!-- Loading Overlay -->
     <div v-if="libraryStore.isLoading" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm">
       <div class="flex flex-col items-center gap-4">
@@ -114,73 +108,25 @@ function playTrack(track: Track) {
     </div>
 
     <!-- Header / Toolbar -->
-    <header class="bg-gray-800 shadow-sm sticky top-0 z-20 border-b border-gray-700">
-      <div class="w-full px-6 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <button @click="goBack" class="p-2 hover:bg-gray-700 rounded-full transition-colors text-gray-300">
-            ⬅️
-          </button>
-          <h1 class="text-xl font-bold text-white truncate max-w-md">
-            {{ album.title }}
-            <span class="text-gray-400 font-normal text-sm ml-2">par {{ album.artist }}</span>
-          </h1>
-        </div>
-        
-        <div class="flex gap-2">
-          <template v-if="libraryStore.hasPendingCorrection(album.id)">
-            <div class="flex items-center gap-2 bg-yellow-900/30 px-3 py-1 rounded-lg border border-yellow-700/50 mr-2">
-              <span class="text-yellow-400 text-xs font-medium">Prévisualisation</span>
-              <button 
-                @click="handleApplyCorrection"
-                class="px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-500 transition-colors"
-              >
-                Appliquer
-              </button>
-              <button 
-                @click="handleCancelCorrection"
-                class="px-3 py-1.5 bg-red-600 text-white text-xs rounded hover:bg-red-500 transition-colors"
-              >
-                Annuler
-              </button>
-            </div>
-          </template>
-          <template v-else>
-            <button 
-              @click="handleAutoCorrect"
-              :disabled="libraryStore.isLoading"
-              class="px-4 py-2 bg-blue-900/50 text-blue-300 border border-blue-700 rounded-lg hover:bg-blue-900 font-medium text-sm transition-colors flex items-center gap-2"
-            >
-              ✨ Auto-Correction
-            </button>
-            <button 
-              @click="handleSave"
-              :disabled="libraryStore.isLoading"
-              class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 font-medium text-sm transition-colors shadow-sm disabled:opacity-50"
-            >
-              {{ libraryStore.isLoading ? '...' : '💾 Sauvegarder' }}
-            </button>
-          </template>
-        </div>
-      </div>
-    </header>
+    <AlbumDetailToolbar :albums="albums" />
 
     <!-- Content -->
-    <main class="flex-1 w-full mx-auto px-4 py-8 flex gap-8">
-      
-      <AlbumSidebar 
-        :album="album"
-        @update:title="album.title = $event"
-        @update:artist="album.artist = $event"
-        @update:year="album.year = $event"
-        @update:genre="libraryStore.updateAlbumTracksField(albumId, 'genre', $event)"
-        @change-cover="showCoverModal = true"
-      />
-
-      <TrackList 
-        :tracks="album.tracks"
-        @play="playTrack"
-        @add-to-playlist="openPlaylistModal"
-      />
+    <main class="flex-1 w-full mx-auto px-4 py-4 flex flex-col overflow-hidden">
+      <template v-if="albums.length > 1">
+        <MultiAlbumEditor 
+          :albums="albums"
+          @play="playTrack"
+          @add-to-playlist="openPlaylistModal"
+        />
+      </template>
+      <template v-else-if="albums.length === 1">
+        <AlbumEditor 
+          :album="albums[0]"
+          @play="playTrack"
+          @add-to-playlist="openPlaylistModal"
+          @change-cover="openCoverModal(albums[0])"
+        />
+      </template>
     </main>
 
     <!-- Playlist Selection Modal -->
@@ -217,10 +163,10 @@ function playTrack(track: Track) {
     </div>
 
     <CoverSearchModal 
-      v-if="showCoverModal"
+      v-if="showCoverModal && activeAlbumForCover"
       :is-open="showCoverModal"
-      :artist="album.artist"
-      :album="album.title"
+      :artist="activeAlbumForCover.artist"
+      :album="activeAlbumForCover.title"
       @close="showCoverModal = false"
       @select="handleCoverSelect"
     />

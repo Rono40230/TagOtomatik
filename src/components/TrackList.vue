@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { Track } from '../types';
-import { reactive, ref } from 'vue';
+import { reactive, ref, computed, watch } from 'vue';
+import { invoke } from '@tauri-apps/api/core';
+import TrackRow from './TrackRow.vue';
 
-defineProps<{
+const props = defineProps<{
   tracks: Track[]
 }>();
 
@@ -14,7 +16,9 @@ const emit = defineEmits<{
 // Column Resizing Logic
 const colWidths = reactive<Record<string, number>>({
   play: 50,
+  cover: 60,
   number: 60,
+  filename: 200,
   title: 300,
   artist: 200,
   album_artist: 200,
@@ -27,6 +31,70 @@ const colWidths = reactive<Record<string, number>>({
 const resizing = ref<string | null>(null);
 const startX = ref(0);
 const startW = ref(0);
+
+// Sorting Logic
+const sortColumn = ref<keyof Track | null>(null);
+const sortDirection = ref<'asc' | 'desc'>('asc');
+
+function toggleSort(column: keyof Track) {
+  if (sortColumn.value === column) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortColumn.value = column;
+    sortDirection.value = 'asc';
+  }
+}
+
+const sortedTracks = computed(() => {
+  if (!sortColumn.value) return props.tracks;
+  
+  return [...props.tracks].sort((a, b) => {
+    const col = sortColumn.value!;
+    const valA = a[col];
+    const valB = b[col];
+    
+    if (valA === valB) return 0;
+    
+    // Handle undefined/null
+    if (valA === undefined || valA === null) return 1;
+    if (valB === undefined || valB === null) return -1;
+    
+    let result = 0;
+    if (typeof valA === 'string' && typeof valB === 'string') {
+      result = valA.localeCompare(valB);
+    } else if (typeof valA === 'number' && typeof valB === 'number') {
+      result = valA - valB;
+    } else {
+        // Fallback
+        result = String(valA).localeCompare(String(valB));
+    }
+    
+    return sortDirection.value === 'asc' ? result : -result;
+  });
+});
+
+// Cover Loading Logic
+const trackCovers = reactive<Map<string, string>>(new Map());
+
+async function loadCover(track: Track) {
+    if (!track.has_cover || trackCovers.has(track.path)) return;
+    
+    try {
+        const bytes = await invoke<number[]>('read_track_cover', { path: track.path });
+        const blob = new Blob([new Uint8Array(bytes)]);
+        const url = URL.createObjectURL(blob);
+        trackCovers.set(track.path, url);
+    } catch (e) {
+        // Fail silently
+    }
+}
+
+// Watch for new tracks to load covers (lazy loading could be better but let's start simple)
+watch(() => props.tracks, (newTracks) => {
+    newTracks.forEach(t => {
+        if (t.has_cover) loadCover(t);
+    });
+}, { immediate: true });
 
 function startResize(e: MouseEvent, col: string) {
   resizing.value = col;
@@ -49,174 +117,79 @@ function stopResize() {
   document.removeEventListener('mouseup', stopResize);
   document.body.style.cursor = '';
 }
-
-// Helper pour détecter les changements
-function hasChanged(track: Track, field: keyof Track): boolean {
-    if (!track.original_metadata) return false;
-    // @ts-ignore - Accès dynamique sûr ici
-    return track[field] !== track.original_metadata[field];
-}
-
-// Helper pour afficher la valeur originale si changée
-function getOriginalValue(track: Track, field: keyof Track): string {
-    if (!track.original_metadata) return '';
-    // @ts-ignore
-    return String(track.original_metadata[field] || '');
-}
 </script>
 
 <template>
-  <div class="flex-1 bg-gray-800 rounded-lg shadow overflow-hidden border border-gray-700 flex flex-col">
-    <div class="overflow-x-auto flex-1">
+  <div class="flex-1 bg-gray-800 rounded-lg shadow overflow-hidden border border-gray-700 flex flex-col h-full">
+    <div class="overflow-auto flex-1">
       <table class="min-w-full divide-y divide-gray-700 table-fixed">
-        <thead class="bg-gray-900">
+        <thead class="bg-gray-900 sticky top-0 z-20 shadow-md">
           <tr>
             <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group" :style="{ width: colWidths.play + 'px' }">
               <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown="startResize($event, 'play')"></div>
             </th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group" :style="{ width: colWidths.number + 'px' }">
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group cursor-pointer hover:bg-gray-800" :style="{ width: colWidths.cover + 'px' }" @click="toggleSort('has_cover')">
+              Cover
+              <span v-if="sortColumn === 'has_cover'" class="ml-1">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown.stop="startResize($event, 'cover')"></div>
+            </th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group cursor-pointer hover:bg-gray-800" :style="{ width: colWidths.number + 'px' }" @click="toggleSort('track_number')">
               #
-              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown="startResize($event, 'number')"></div>
+              <span v-if="sortColumn === 'track_number'" class="ml-1">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown.stop="startResize($event, 'number')"></div>
             </th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group" :style="{ width: colWidths.title + 'px' }">
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group cursor-pointer hover:bg-gray-800" :style="{ width: colWidths.filename + 'px' }" @click="toggleSort('filename')">
+              Nom du fichier
+              <span v-if="sortColumn === 'filename'" class="ml-1">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown.stop="startResize($event, 'filename')"></div>
+            </th>
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group cursor-pointer hover:bg-gray-800" :style="{ width: colWidths.title + 'px' }" @click="toggleSort('title')">
               Titre
-              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown="startResize($event, 'title')"></div>
+              <span v-if="sortColumn === 'title'" class="ml-1">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown.stop="startResize($event, 'title')"></div>
             </th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group" :style="{ width: colWidths.artist + 'px' }">
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group cursor-pointer hover:bg-gray-800" :style="{ width: colWidths.artist + 'px' }" @click="toggleSort('artist')">
               Artiste
-              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown="startResize($event, 'artist')"></div>
+              <span v-if="sortColumn === 'artist'" class="ml-1">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown.stop="startResize($event, 'artist')"></div>
             </th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group" :style="{ width: colWidths.album_artist + 'px' }">
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group cursor-pointer hover:bg-gray-800" :style="{ width: colWidths.album_artist + 'px' }" @click="toggleSort('album_artist')">
               Album Artiste
-              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown="startResize($event, 'album_artist')"></div>
+              <span v-if="sortColumn === 'album_artist'" class="ml-1">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown.stop="startResize($event, 'album_artist')"></div>
             </th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group" :style="{ width: colWidths.album + 'px' }">
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group cursor-pointer hover:bg-gray-800" :style="{ width: colWidths.album + 'px' }" @click="toggleSort('album')">
               Album
-              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown="startResize($event, 'album')"></div>
+              <span v-if="sortColumn === 'album'" class="ml-1">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown.stop="startResize($event, 'album')"></div>
             </th>
-            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group" :style="{ width: colWidths.genre + 'px' }">
+            <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider relative group cursor-pointer hover:bg-gray-800" :style="{ width: colWidths.genre + 'px' }" @click="toggleSort('genre')">
               Genre
-              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown="startResize($event, 'genre')"></div>
+              <span v-if="sortColumn === 'genre'" class="ml-1">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown.stop="startResize($event, 'genre')"></div>
             </th>
-            <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider relative group" :style="{ width: colWidths.duration + 'px' }">
+            <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider relative group cursor-pointer hover:bg-gray-800" :style="{ width: colWidths.duration + 'px' }" @click="toggleSort('duration_sec')">
               Durée
-              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown="startResize($event, 'duration')"></div>
+              <span v-if="sortColumn === 'duration_sec'" class="ml-1">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown.stop="startResize($event, 'duration')"></div>
             </th>
             <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider relative group" :style="{ width: colWidths.actions + 'px' }">
-              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown="startResize($event, 'actions')"></div>
+              <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown.stop="startResize($event, 'actions')"></div>
             </th>
           </tr>
         </thead>
         <tbody class="bg-gray-800 divide-y divide-gray-700">
-        <tr v-for="track in tracks" :key="track.path" class="hover:bg-gray-700 group transition-colors">
-          <!-- Play Button -->
-          <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-400">
-            <button 
-              @click="emit('play', track)"
-              class="w-8 h-8 rounded-full bg-gray-700 hover:bg-blue-900 text-blue-400 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              ▶️
-            </button>
-          </td>
-
-          <!-- Track Number -->
-          <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-300">
-            <input 
-              type="number" 
-              v-model.number="track.track_number"
-              class="w-12 bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none text-center"
-              :class="{'text-yellow-400': hasChanged(track, 'track_number')}"
-            />
-          </td>
-
-          <!-- Title -->
-          <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-300">
-            <div class="relative">
-              <div v-if="hasChanged(track, 'title')" class="text-xs text-red-400 line-through mb-0.5">
-                {{ getOriginalValue(track, 'title') }}
-              </div>
-              <input 
-                v-model="track.title"
-                class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
-                :class="{'text-green-400 font-medium': hasChanged(track, 'title')}"
-              />
-            </div>
-          </td>
-
-          <!-- Artist -->
-          <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-300">
-            <div class="relative">
-              <div v-if="hasChanged(track, 'artist')" class="text-xs text-red-400 line-through mb-0.5">
-                {{ getOriginalValue(track, 'artist') }}
-              </div>
-              <input 
-                v-model="track.artist"
-                class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
-                :class="{'text-green-400 font-medium': hasChanged(track, 'artist')}"
-              />
-            </div>
-          </td>
-
-          <!-- Album Artist -->
-          <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-300">
-            <div class="relative">
-              <div v-if="hasChanged(track, 'album_artist')" class="text-xs text-red-400 line-through mb-0.5">
-                {{ getOriginalValue(track, 'album_artist') }}
-              </div>
-              <input 
-                v-model="track.album_artist"
-                class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
-                :class="{'text-green-400 font-medium': hasChanged(track, 'album_artist')}"
-              />
-            </div>
-          </td>
-
-          <!-- Album -->
-          <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-300">
-            <div class="relative">
-              <div v-if="hasChanged(track, 'album')" class="text-xs text-red-400 line-through mb-0.5">
-                {{ getOriginalValue(track, 'album') }}
-              </div>
-              <input 
-                v-model="track.album"
-                class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
-                :class="{'text-green-400 font-medium': hasChanged(track, 'album')}"
-              />
-            </div>
-          </td>
-
-          <!-- Genre -->
-          <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-300">
-            <div class="relative">
-              <div v-if="hasChanged(track, 'genre')" class="text-xs text-red-400 line-through mb-0.5">
-                {{ getOriginalValue(track, 'genre') }}
-              </div>
-              <input 
-                v-model="track.genre"
-                class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
-                :class="{'text-green-400 font-medium': hasChanged(track, 'genre')}"
-              />
-            </div>
-          </td>
-
-          <!-- Duration -->
-          <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-400 text-right">
-            {{ Math.floor(track.duration_sec / 60) }}:{{ (track.duration_sec % 60).toString().padStart(2, '0') }}
-          </td>
-
-          <!-- Actions -->
-          <td class="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
-            <button 
-              @click="emit('add-to-playlist', track.path)"
-              class="text-gray-500 hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
-              title="Ajouter à une playlist"
-            >
-              ➕
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          <TrackRow 
+            v-for="track in sortedTracks" 
+            :key="track.path"
+            :track="track"
+            :col-widths="colWidths"
+            :cover-url="trackCovers.get(track.path)"
+            @play="emit('play', $event)"
+            @add-to-playlist="emit('add-to-playlist', $event)"
+          />
+        </tbody>
+      </table>
     </div>
   </div>
 </template>

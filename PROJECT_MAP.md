@@ -1,5 +1,5 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: mer. 31 déc. 2025 21:05:59 CET
+Date: jeu. 01 janv. 2026 16:39:39 CET
 
 ## 📂 Arborescence (Backend)
 ```
@@ -52,11 +52,17 @@ src
     vue.svg
   components
     AlbumCard.vue
+    AlbumDetailToolbar.vue
+    AlbumEditor.vue
     AlbumSidebar.vue
+    ConfirmationModal.vue
     CoverSearchModal.vue
+    MultiAlbumEditor.vue
+    MultiAlbumSidebar.vue
     PlayerBar.vue
     ToastContainer.vue
     TrackList.vue
+    TrackRow.vue
   main.ts
   router
     index.ts

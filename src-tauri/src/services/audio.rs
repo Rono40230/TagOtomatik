@@ -57,6 +57,7 @@ impl AudioService {
             track.year = tag.year();
             track.track_number = tag.track();
             track.genre = tag.genre().map(|s| s.to_string());
+            track.has_cover = tag.picture_count() > 0;
         }
 
         // Sauvegarder les métadonnées originales pour la comparaison
@@ -88,6 +89,12 @@ impl AudioService {
         tag.insert_text(ItemKey::AlbumArtist, track.album_artist.clone());
         if let Some(ref genre) = track.genre {
             tag.set_genre(genre.clone());
+        }
+        if let Some(year) = track.year {
+            tag.set_year(year);
+        }
+        if let Some(track_num) = track.track_number {
+            tag.set_track(track_num);
         }
 
         tag.save_to_path(path)

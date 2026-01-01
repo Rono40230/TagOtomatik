@@ -11,9 +11,15 @@ lazy_static! {
     // Regex pour les patterns indésirables (ex: [320kbps], www.site.com)
     static ref RE_GARBAGE: Regex = Regex::new(r"(?i)(\[.*?\]|\(.*?\)|\bwww\..*?\.[a-z]{2,4}\b)").unwrap();
 
+    // Regex pour supprimer le contenu entre parenthèses
+    static ref RE_PARENTHESES: Regex = Regex::new(r"\(.*?\)").unwrap();
+
     // Regex pour normaliser les connecteurs
     static ref RE_FEAT: Regex = Regex::new(r"(?i)\s+(feat\.?|ft\.?|with)\s+").unwrap();
-    static ref RE_AND: Regex = Regex::new(r"(?i)\s+and\s+").unwrap();
+    static ref RE_AND: Regex = Regex::new(r"(?i)\s+(and|et)\s+").unwrap();
+
+    // Regex pour supprimer le préfixe de numéro de piste (ex: "01 - ", "1. ", "1 ")
+    static ref RE_TRACK_PREFIX: Regex = Regex::new(r"^\d+[\.\-\s]+\s*").unwrap();
 }
 
 pub struct MetadataProcessorService;
@@ -29,6 +35,41 @@ impl MetadataProcessorService {
         Self
     }
 
+    pub fn nettoyer_filename(&self, filename: &str, track_number: Option<u32>) -> String {
+        let path = std::path::Path::new(filename);
+        let stem = path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or(filename);
+        let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
+
+        // 1. Supprimer le préfixe existant (numéro de piste)
+        let stem_no_prefix = RE_TRACK_PREFIX.replace(stem, "");
+
+        // 2. Nettoyage de base (Regex) sur le reste
+        let mut cleaned_stem = self.nettoyer_chaine(&stem_no_prefix);
+
+        // 3. Suppression des parenthèses
+        cleaned_stem = RE_PARENTHESES.replace_all(&cleaned_stem, "").to_string();
+
+        // 4. Re-nettoyage espaces
+        cleaned_stem = RE_SPACES.replace_all(&cleaned_stem, " ").trim().to_string();
+
+        // 5. Correction de la casse
+        cleaned_stem = self.corriger_casse(&cleaned_stem);
+
+        // 6. Ajouter le préfixe standardisé si un numéro est fourni
+        if let Some(n) = track_number {
+            cleaned_stem = format!("{:02} - {}", n, cleaned_stem);
+        }
+
+        if !ext.is_empty() {
+            format!("{}.{}", cleaned_stem, ext)
+        } else {
+            cleaned_stem
+        }
+    }
+
     pub fn nettoyer_track(
         &self,
         track: &mut Track,
@@ -37,6 +78,14 @@ impl MetadataProcessorService {
         track.title = self.nettoyer_chaine(&track.title);
         track.artist = self.nettoyer_chaine(&track.artist);
         track.album = self.nettoyer_chaine(&track.album);
+
+        // Suppression des parenthèses pour Titre et Album
+        track.title = RE_PARENTHESES.replace_all(&track.title, "").to_string();
+        track.album = RE_PARENTHESES.replace_all(&track.album, "").to_string();
+
+        // Re-nettoyage des espaces après suppression
+        track.title = RE_SPACES.replace_all(&track.title, " ").trim().to_string();
+        track.album = RE_SPACES.replace_all(&track.album, " ").trim().to_string();
 
         // Rule: Artist -> Album Artist if empty
         // Note: Track struct might not have album_artist field visible here?
@@ -85,6 +134,32 @@ impl MetadataProcessorService {
             {
                 track.is_modified = true;
             }
+        }
+    }
+
+    pub fn nettoyer_album_metadata(
+        &self,
+        track: &mut Track,
+        exceptions: &HashMap<(String, String), String>,
+    ) {
+        // 1. Nettoyage de base
+        track.album = self.nettoyer_chaine(&track.album);
+
+        // 2. Suppression des parenthèses
+        track.album = RE_PARENTHESES.replace_all(&track.album, "").to_string();
+
+        // 3. Re-nettoyage espaces
+        track.album = RE_SPACES.replace_all(&track.album, " ").trim().to_string();
+
+        // 4. Correction de la casse
+        track.album = self.corriger_casse(&track.album);
+
+        // 5. Exceptions
+        if let Some(corr) = exceptions.get(&("global".to_string(), track.album.to_lowercase())) {
+            track.album = corr.clone();
+        }
+        if let Some(corr) = exceptions.get(&("album".to_string(), track.album.to_lowercase())) {
+            track.album = corr.clone();
         }
     }
 

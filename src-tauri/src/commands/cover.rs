@@ -30,3 +30,29 @@ pub async fn download_cover(
     let service = CoverService::new();
     service.download_cover(&url, &target_path).await
 }
+
+#[tauri::command]
+pub async fn read_cover(path: String) -> Result<Vec<u8>, String> {
+    std::fs::read(&path).map_err(|e| format!("Erreur lecture cover: {}", e))
+}
+
+#[tauri::command]
+pub async fn read_track_cover(path: String) -> Result<Vec<u8>, String> {
+    use lofty::{Probe, TaggedFileExt};
+
+    let tagged_file = Probe::open(&path)
+        .map_err(|e| format!("Erreur ouverture: {}", e))?
+        .read()
+        .map_err(|e| format!("Erreur lecture: {}", e))?;
+
+    let tag = tagged_file
+        .primary_tag()
+        .ok_or_else(|| "Pas de tag trouvé".to_string())?;
+
+    let pictures = tag.pictures();
+    if let Some(pic) = pictures.first() {
+        Ok(pic.data().to_vec())
+    } else {
+        Err("Pas de cover trouvée".to_string())
+    }
+}

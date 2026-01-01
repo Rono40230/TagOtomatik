@@ -30,7 +30,7 @@ lazy_static! {
         let mut s = HashSet::new();
         let list = vec![
             "USA", "UK", "US", "DJ", "MC", "NYC", "LA", "SF", "DC", "CD", "DVD",
-            "TV", "FM", "BC", "AD", "CEO", "FBI", "CIA", "NASA",
+            "TV", "FM", "PM", "BC", "AD", "CEO", "FBI", "CIA", "NASA",
             "BBC", "CNN", "ESPN", "MTV", "VHS", "GPS", "WWW", "HTTP", "FTP"
         ];
         for p in list { s.insert(p); }

@@ -2,7 +2,6 @@
 import type { Album } from '../types';
 import { computed, ref, onMounted, watch, onUnmounted } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
-import { readFile } from '@tauri-apps/plugin-fs';
 
 const props = defineProps<{
   album: Album
@@ -26,13 +25,18 @@ async function loadCover() {
   }
 
   try {
-    const contents = await readFile(props.album.cover_path);
-    const blob = new Blob([contents]);
+    // Utilisation de la commande Rust 'read_cover' pour contourner les restrictions de sécurité
+    const contents = await invoke<number[]>('read_cover', { path: props.album.cover_path });
+    const uint8Array = new Uint8Array(contents);
+    const blob = new Blob([uint8Array]);
     const url = URL.createObjectURL(blob);
     
-    if (coverUrl.value) URL.revokeObjectURL(coverUrl.value);
+    if (coverUrl.value && coverUrl.value.startsWith('blob:')) {
+      URL.revokeObjectURL(coverUrl.value);
+    }
     coverUrl.value = url;
   } catch (e) {
+    // Fail silently
     coverUrl.value = null;
   }
 }
@@ -63,11 +67,19 @@ const GENRES = [
     "Musique Franco-Hispanique", "New-Wave", "Pop", "Rap", "Reggae", "Rock",
     "Soul", "Top 50", "Trip-Hop", "Zouk"
 ];
+
+// Computed property to get the common album tag from tracks
+const commonAlbumTag = computed(() => {
+  if (props.album.tracks.length > 0) {
+    return props.album.tracks[0].album;
+  }
+  return props.album.title; // Fallback
+});
 </script>
 
 <template>
-  <aside class="w-96 flex-shrink-0">
-    <div class="bg-gray-800 rounded-lg shadow p-6 sticky top-24 border border-gray-700">
+  <aside class="w-96 flex-shrink-0 h-full overflow-y-auto custom-scrollbar">
+    <div class="bg-gray-800 rounded-lg shadow p-6 border border-gray-700 min-h-min">
       <div class="aspect-square bg-gray-700 rounded-md mb-6 overflow-hidden relative group shadow-lg">
           <img v-if="coverUrl" :src="coverUrl" class="w-full h-full object-cover" />
           <div v-else class="w-full h-full flex items-center justify-center text-6xl text-gray-500">🎵</div>
@@ -87,7 +99,7 @@ const GENRES = [
         <div>
           <label class="block text-xs font-medium text-gray-400 uppercase mb-1">Album</label>
           <input 
-            :value="album.title"
+            :value="commonAlbumTag"
             @input="$emit('update:title', ($event.target as HTMLInputElement).value)"
             class="w-full h-10 p-2.5 border border-gray-600 rounded-lg text-base font-semibold bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" 
           />
@@ -117,7 +129,7 @@ const GENRES = [
                 @change="$emit('update:genre', ($event.target as HTMLSelectElement).value)"
                 class="w-full h-10 p-2.5 border border-gray-600 rounded-lg text-sm bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
               >
-                <option value="">Sélectionner...</option>
+                <option value=""></option>
                 <option v-for="genre in GENRES" :key="genre" :value="genre">{{ genre }}</option>
               </select>
             </div>

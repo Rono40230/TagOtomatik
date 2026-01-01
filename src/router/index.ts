@@ -33,6 +33,11 @@ const routes = [
     component: AlbumDetailView
   },
   {
+    path: '/albums/edit',
+    name: 'MultiAlbumEdit',
+    component: AlbumDetailView
+  },
+  {
     path: '/settings',
     name: 'Settings',
     component: SettingsView

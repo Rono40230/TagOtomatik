@@ -11,9 +11,10 @@
     {
       "identifier": "fs:allow-read",
       "allow": [
-        { "path": "$HOME/**" },
-        { "path": "/media/**" },
-        { "path": "/mnt/**" }
+        "$HOME/**",
+        "/home/**",
+        "/media/**",
+        "/mnt/**"
       ]
     }
   ]

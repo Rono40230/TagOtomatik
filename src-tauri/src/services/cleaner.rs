@@ -21,7 +21,7 @@ impl CleanerService {
         &self,
         tracks: &mut [Track],
         album_path: &Path,
-        renamer: &RenamerService,
+        _renamer: &RenamerService, // Unused now
     ) {
         for track in tracks {
             let current_path = Path::new(&track.path);
@@ -29,13 +29,9 @@ impl CleanerService {
                 continue;
             }
 
-            let extension = current_path
-                .extension()
-                .and_then(|e| e.to_str())
-                .unwrap_or("mp3");
-
-            let new_filename =
-                renamer.format_track_filename(track.track_number, &track.title, extension);
+            // Use the filename from the track struct (which might have been cleaned/edited)
+            // instead of regenerating it from tags.
+            let new_filename = track.filename.clone();
 
             let target_path = album_path.join(&new_filename);
 
@@ -81,6 +77,26 @@ impl CleanerService {
         // Priority: cover.jpg > front.jpg > largest file
         let target_cover = album_path.join("cover.jpg");
 
+        // Rename known patterns to cover.jpg
+        let rename_patterns = ["front", "folder", "album", "albumart", "artwork"];
+
+        for image_path in &images {
+            if let Some(stem) = image_path.file_stem().and_then(|s| s.to_str()) {
+                let stem_lower = stem.to_lowercase();
+                if rename_patterns.contains(&stem_lower.as_str()) {
+                    // If cover.jpg doesn't exist, rename this one to cover.jpg
+                    if !target_cover.exists() {
+                        let _ = fs::rename(image_path, &target_cover);
+                        return; // Done
+                    } else {
+                        // If cover.jpg exists, delete this duplicate/variant
+                        let _ = fs::remove_file(image_path);
+                    }
+                }
+                // Also handle albumart_... patterns if needed, but let's stick to exact matches first
+            }
+        }
+
         if !target_cover.exists() && !images.is_empty() {
             let best_image = images
                 .iter()
@@ -109,7 +125,10 @@ impl CleanerService {
                 });
 
             if let Some(src) = best_image {
-                let _ = fs::rename(src, &target_cover);
+                if src.exists() {
+                    // Check existence as it might have been renamed/deleted above
+                    let _ = fs::rename(src, &target_cover);
+                }
             }
         }
     }
@@ -144,7 +163,17 @@ impl CleanerService {
             "._metadata",
             "#recycle",
             "recycle.bin",
+            ".ds_store",
+            "thumbs.db",
+            "folder.jpg",
+            "albumartsmall.jpg",
+            ".nomedia",
+            "ehthumbs.db",
+            "ehthumbs_vista.db",
+            "image.db",
         ];
+
+        // Patterns with wildcards (handled manually): albumart_*_large.jpg, albumart_*_small.jpg, ._*
 
         // Pass 1: Delete junk files recursively
         let mut dirs_to_check = vec![album_path.to_path_buf()];
@@ -166,10 +195,25 @@ impl CleanerService {
                             .unwrap_or("")
                             .to_lowercase();
 
+                        // Check exact matches
                         if junk_files.contains(&name.as_str())
                             || junk_extensions.contains(&ext.as_str())
                         {
                             let _ = fs::remove_file(&path);
+                            continue;
+                        }
+
+                        // Check wildcard patterns
+                        if name.starts_with("albumart_")
+                            && (name.ends_with("_large.jpg") || name.ends_with("_small.jpg"))
+                        {
+                            let _ = fs::remove_file(&path);
+                            continue;
+                        }
+
+                        if name.starts_with("._") {
+                            let _ = fs::remove_file(&path);
+                            continue;
                         }
                     }
                 }

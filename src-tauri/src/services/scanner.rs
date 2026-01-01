@@ -56,9 +56,11 @@ impl ScannerService {
 
                                 // Mettre à jour les infos de l'album avec les infos de la première piste (ou la plus fréquente - simplifions pour l'instant)
                                 if album.tracks.is_empty() {
-                                    if !track.album.is_empty() {
-                                        album.title = track.album.clone();
-                                    }
+                                    // NOTE: On garde le nom du dossier comme titre de l'album (album.title)
+                                    // au lieu d'écraser avec le tag album de la piste.
+                                    // if !track.album.is_empty() {
+                                    //    album.title = track.album.clone();
+                                    // }
                                     if !track.artist.is_empty() {
                                         album.artist = track.artist.clone();
                                     }
@@ -88,7 +90,42 @@ impl ScannerService {
             if album.tracks.is_empty() {
                 album.status = AlbumStatus::Incomplete;
             } else {
-                album.status = AlbumStatus::Clean; // Par défaut, on dira Clean, le processeur dira Dirty plus tard
+                // Vérification de la qualité des tags (Dirty detection)
+                let mut is_dirty = false;
+
+                // 1. Cover manquante
+                if album.cover_path.is_none() {
+                    is_dirty = true;
+                }
+
+                // 2. Année manquante ou incohérente (0)
+                if album.year.is_none() || album.year == Some(0) {
+                    // Vérifier si les pistes ont une année
+                    let has_missing_year = album
+                        .tracks
+                        .iter()
+                        .any(|t| t.year.is_none() || t.year == Some(0));
+                    if has_missing_year {
+                        is_dirty = true;
+                    }
+                }
+
+                // 3. Tags essentiels manquants sur les pistes
+                let has_missing_tags = album.tracks.iter().any(|t| {
+                    t.title.trim().is_empty()
+                        || t.artist.trim().is_empty()
+                        || t.album.trim().is_empty()
+                        || t.genre.as_deref().unwrap_or("").trim().is_empty()
+                });
+                if has_missing_tags {
+                    is_dirty = true;
+                }
+
+                if is_dirty {
+                    album.status = AlbumStatus::Dirty;
+                } else {
+                    album.status = AlbumStatus::Clean;
+                }
             }
             // Trier les pistes par numéro
             album.tracks.sort_by(|a, b| {

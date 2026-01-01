@@ -11,6 +11,9 @@ pub mod processor;
 pub mod renamer;
 pub mod scanner;
 
+#[cfg(test)]
+mod processor_tests;
+
 pub use audio::AudioService;
 pub use cleaner::CleanerService;
 pub use exception::ExceptionService;

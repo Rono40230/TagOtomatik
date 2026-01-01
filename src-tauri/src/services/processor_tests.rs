@@ -1,4 +1,6 @@
 use super::*;
+use crate::models::Track;
+use std::collections::HashMap;
 
 #[test]
 fn test_corriger_casse() {
@@ -31,6 +33,34 @@ fn test_corriger_casse() {
 }
 
 #[test]
+fn test_nettoyer_track_parentheses() {
+    let processor = MetadataProcessorService::new();
+    let mut track = Track {
+        path: "".to_string(),
+        filename: "".to_string(),
+        title: "Song Title (Remix)".to_string(),
+        artist: "Artist (feat. Someone)".to_string(),
+        album_artist: "".to_string(),
+        album: "Album Title (Deluxe Edition)".to_string(),
+        year: None,
+        track_number: None,
+        genre: None,
+        duration_sec: 0,
+        format: "".to_string(),
+        bit_rate: None,
+        has_cover: false,
+        original_metadata: None,
+        is_modified: false,
+    };
+
+    let exceptions = HashMap::new();
+    processor.nettoyer_track(&mut track, &exceptions);
+
+    assert_eq!(track.title, "Song title");
+    assert_eq!(track.album, "Album title");
+}
+
+#[test]
 fn test_format_folder_name() {
     let renamer = RenamerService::new();
 
@@ -38,10 +68,7 @@ fn test_format_folder_name() {
         renamer.format_folder_name("Artist", "Album", Some(2020)),
         "(2020) Album"
     );
-    assert_eq!(
-        renamer.format_folder_name("Artist", "Album", None),
-        "Album"
-    );
+    assert_eq!(renamer.format_folder_name("Artist", "Album", None), "Album");
 
     // Artist Exception
     // Expect Sentence Case: "Live at river plate"

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
-import type { Album } from '../types';
+import type { Album, Track } from '../types';
 import { useToastStore } from './toast';
 
 export const useLibraryStore = defineStore('library', () => {
@@ -120,8 +120,25 @@ export const useLibraryStore = defineStore('library', () => {
         }
     }
 
+    function removeAlbum(albumId: string) {
+        albums.value = albums.value.filter(a => a.id !== albumId);
+        toast.info('Album retiré de la bibliothèque.');
+    }
+
+    function updateAlbumTracksField(albumId: string, field: string, value: Track[keyof Track]) {
+        const album = albums.value.find(a => a.id === albumId);
+        if (!album) return;
+        
+        album.tracks.forEach(track => {
+            // @ts-ignore
+            if (field in track) track[field] = value;
+        });
+    }
+
     return {
-        albums,        currentPath,        isLoading,
+        albums,
+        currentPath,
+        isLoading,
         error,
         scanDirectory,
         getAlbumById,
@@ -129,6 +146,8 @@ export const useLibraryStore = defineStore('library', () => {
         applyAutoCorrect,
         cancelAutoCorrect,
         hasPendingCorrection,
-        saveAlbum
+        saveAlbum,
+        removeAlbum,
+        updateAlbumTracksField
     };
 });

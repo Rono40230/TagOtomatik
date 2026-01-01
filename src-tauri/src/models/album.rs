@@ -17,6 +17,7 @@ pub struct Album {
     pub artist: String, // Artiste principal (Album Artist)
     pub year: Option<u32>,
     pub cover_path: Option<String>, // Chemin vers cover.jpg locale ou cache
+    pub has_playlist: bool,
     pub tracks: Vec<Track>,
     pub status: AlbumStatus,
 }
@@ -30,6 +31,7 @@ impl Album {
             artist,
             year: None,
             cover_path: None,
+            has_playlist: false,
             tracks: Vec::new(),
             status: AlbumStatus::Processing,
         }

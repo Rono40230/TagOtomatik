@@ -84,49 +84,8 @@ impl ScannerService {
 
         // Mettre à jour le statut des albums
         for album in &mut albums {
-            // Chercher la cover
-            album.cover_path = Self::find_cover_image(Path::new(&album.path));
+            Self::evaluate_album_status(album);
 
-            if album.tracks.is_empty() {
-                album.status = AlbumStatus::Incomplete;
-            } else {
-                // Vérification de la qualité des tags (Dirty detection)
-                let mut is_dirty = false;
-
-                // 1. Cover manquante
-                if album.cover_path.is_none() {
-                    is_dirty = true;
-                }
-
-                // 2. Année manquante ou incohérente (0)
-                if album.year.is_none() || album.year == Some(0) {
-                    // Vérifier si les pistes ont une année
-                    let has_missing_year = album
-                        .tracks
-                        .iter()
-                        .any(|t| t.year.is_none() || t.year == Some(0));
-                    if has_missing_year {
-                        is_dirty = true;
-                    }
-                }
-
-                // 3. Tags essentiels manquants sur les pistes
-                let has_missing_tags = album.tracks.iter().any(|t| {
-                    t.title.trim().is_empty()
-                        || t.artist.trim().is_empty()
-                        || t.album.trim().is_empty()
-                        || t.genre.as_deref().unwrap_or("").trim().is_empty()
-                });
-                if has_missing_tags {
-                    is_dirty = true;
-                }
-
-                if is_dirty {
-                    album.status = AlbumStatus::Dirty;
-                } else {
-                    album.status = AlbumStatus::Clean;
-                }
-            }
             // Trier les pistes par numéro
             album.tracks.sort_by(|a, b| {
                 a.track_number
@@ -138,12 +97,79 @@ impl ScannerService {
         Ok(albums)
     }
 
+    pub fn evaluate_album_status(album: &mut Album) {
+        // 1. Check if we already have a valid cover path
+        let mut cover_valid = false;
+        if let Some(path) = &album.cover_path {
+            if Path::new(path).exists() {
+                cover_valid = true;
+            }
+        }
+
+        if !cover_valid {
+            // Chercher la cover
+            album.cover_path = Self::find_cover_image(Path::new(&album.path));
+        }
+
+        // 2. Check for playlist
+        album.has_playlist = Self::has_playlist(Path::new(&album.path));
+
+        if album.tracks.is_empty() {
+            album.status = AlbumStatus::Incomplete;
+            return;
+        }
+
+        // Vérification de la qualité des tags (Dirty detection)
+        let mut is_dirty = false;
+
+        // 1. Cover manquante
+        if album.cover_path.is_none() {
+            is_dirty = true;
+        }
+
+        // 2. Playlist manquante
+        if !album.has_playlist {
+            is_dirty = true;
+        }
+
+        // 3. Année manquante ou incohérente (0)
+        if album.year.is_none() || album.year == Some(0) {
+            // Vérifier si les pistes ont une année
+            let has_missing_year = album
+                .tracks
+                .iter()
+                .any(|t| t.year.is_none() || t.year == Some(0));
+            if has_missing_year {
+                is_dirty = true;
+            }
+        }
+
+        // 3. Tags essentiels manquants sur les pistes
+        let has_missing_tags = album.tracks.iter().any(|t| {
+            t.title.trim().is_empty()
+                || t.artist.trim().is_empty()
+                || t.album.trim().is_empty()
+                || t.genre.as_deref().unwrap_or("").trim().is_empty()
+        });
+        if has_missing_tags {
+            is_dirty = true;
+        }
+
+        if is_dirty {
+            album.status = AlbumStatus::Dirty;
+        } else {
+            album.status = AlbumStatus::Clean;
+        }
+    }
+
     pub fn detecter_fichiers_inutiles(
         &self,
         chemin_dossier: &str,
     ) -> Result<Vec<String>, AppError> {
         let mut junk_files = Vec::new();
-        let whitelist_ext = ["mp3", "flac", "ogg", "m4a", "wav", "jpg", "jpeg", "png"];
+        let whitelist_ext = [
+            "mp3", "flac", "ogg", "m4a", "wav", "jpg", "jpeg", "png", "m3u", "m3u8", "pls",
+        ];
 
         let path = Path::new(chemin_dossier);
         if !path.exists() || !path.is_dir() {
@@ -204,5 +230,22 @@ impl ScannerService {
         }
 
         None
+    }
+
+    fn has_playlist(path: &Path) -> bool {
+        if let Ok(entries) = std::fs::read_dir(path) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.is_file() {
+                    if let Some(ext) = p.extension() {
+                        let ext_str = ext.to_string_lossy().to_lowercase();
+                        if ["m3u", "m3u8", "pls"].contains(&ext_str.as_str()) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        false
     }
 }

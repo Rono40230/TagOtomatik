@@ -18,15 +18,24 @@ export const useLibraryStore = defineStore('library', () => {
         currentPath.value = path;
         isLoading.value = true;
         error.value = null;
-        originalAlbums.value.clear();
         
         try {
             const result = await invoke<Album[]>('scan_directory', { path });
-            albums.value = result;
-            if (result.length === 0) {
-                toast.info('Aucun album trouvé dans ce dossier.');
+            
+            // Filter duplicates based on ID
+            const existingIds = new Set(albums.value.map(a => a.id));
+            const newAlbums = result.filter(a => !existingIds.has(a.id));
+            
+            albums.value.push(...newAlbums);
+            
+            if (newAlbums.length === 0) {
+                if (result.length > 0) {
+                    toast.info('Tous les albums trouvés sont déjà dans la bibliothèque.');
+                } else {
+                    toast.info('Aucun album trouvé dans ce dossier.');
+                }
             } else {
-                toast.success(`${result.length} albums trouvés.`);
+                toast.success(`${newAlbums.length} albums ajoutés.`);
             }
         } catch (e: unknown) {
             const errMsg = e instanceof Error ? e.message : String(e);
@@ -131,7 +140,14 @@ export const useLibraryStore = defineStore('library', () => {
         
         album.tracks.forEach(track => {
             // @ts-ignore
-            if (field in track) track[field] = value;
+            if (field in track) {
+                // @ts-ignore
+                if (track[field] !== value) {
+                    // @ts-ignore
+                    track[field] = value;
+                    track.is_modified = true;
+                }
+            }
         });
     }
 

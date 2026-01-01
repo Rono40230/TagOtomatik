@@ -68,6 +68,7 @@ const statusTooltip = computed(() => {
   const issues: string[] = [];
   
   if (!props.album.cover_path) issues.push('• Cover manquante');
+  if (!props.album.has_playlist) issues.push('• Playlist manquante');
   if (!props.album.year || props.album.year === 0) issues.push('• Année manquante');
   
   let missingTitles = 0;
@@ -132,28 +133,27 @@ function goToConverter() {
       </svg>
     </button>
 
+    <!-- Status Badge (Top Right, visible when not hovering, hidden on hover to show delete button) -->
+    <div class="absolute top-2 right-2 z-10 group/status group-hover:opacity-0 transition-opacity">
+      <span 
+        :class="['text-xs font-bold px-2 py-1 rounded-full shadow-md cursor-help inline-block', statusColor]"
+      >
+        {{ album.status }}
+      </span>
+      <!-- Custom Tooltip -->
+      <div 
+        v-if="album.status !== 'Clean'"
+        class="absolute top-full right-0 mt-2 w-56 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl border border-gray-700 opacity-0 group-hover/status:opacity-100 transition-opacity pointer-events-none z-30 whitespace-pre-line leading-relaxed"
+      >
+        <div class="font-bold mb-1 border-b border-gray-700 pb-1 text-yellow-500">Problèmes détectés :</div>
+        {{ statusTooltip }}
+      </div>
+    </div>
+
     <div class="aspect-square bg-gray-700 flex items-center justify-center relative">
       <img v-if="coverUrl" :src="coverUrl" alt="Cover" class="w-full h-full object-cover" />
       <div v-else class="flex flex-col items-center justify-center text-gray-400 h-full w-full">
         <span class="text-sm font-medium">Cover absente</span>
-      </div>
-      
-      <!-- Status Badge (Top Right, below delete button if visible, but delete is hidden by default) -->
-      <!-- Actually, let's put it bottom-right but with proper spacing/z-index -->
-      <div class="absolute bottom-2 right-2 z-10 group/status">
-        <span 
-          :class="['text-xs font-bold px-2 py-1 rounded-full shadow-md cursor-help inline-block', statusColor]"
-        >
-          {{ album.status }}
-        </span>
-        <!-- Custom Tooltip -->
-        <div 
-          v-if="album.status !== 'Clean'"
-          class="absolute bottom-full right-0 mb-2 w-56 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl border border-gray-700 opacity-0 group-hover/status:opacity-100 transition-opacity pointer-events-none z-30 whitespace-pre-line leading-relaxed"
-        >
-          <div class="font-bold mb-1 border-b border-gray-700 pb-1 text-yellow-500">Problèmes détectés :</div>
-          {{ statusTooltip }}
-        </div>
       </div>
     </div>
     

@@ -30,6 +30,7 @@ export interface Album {
     artist: string;
     year?: number;
     cover_path?: string;
+    has_playlist: boolean;
     tracks: Track[];
     status: AlbumStatus;
 }

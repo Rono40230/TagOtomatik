@@ -28,6 +28,19 @@ watch(() => props.track.filename, (newVal) => {
   }
 });
 
+// Watch for any changes to mark as modified
+watch(() => props.track, (newVal) => {
+    if (!newVal.original_metadata) return;
+    
+    const fields: (keyof Track)[] = ['title', 'artist', 'album', 'album_artist', 'year', 'track_number', 'genre', 'filename'];
+    // @ts-ignore
+    const isModified = fields.some(field => newVal[field] != newVal.original_metadata![field]);
+    
+    if (newVal.is_modified !== isModified) {
+        newVal.is_modified = isModified;
+    }
+}, { deep: true });
+
 import { GENRES } from '../constants';
 
 // Helper pour détecter les changements

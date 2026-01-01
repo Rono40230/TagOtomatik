@@ -1,5 +1,6 @@
 use crate::models::{Album, AppError};
-use crate::services::{AudioService, IOService};
+use crate::services::{AudioService, IOService, ScannerService};
+use regex::Regex;
 use std::path::PathBuf;
 
 fn sanitize_filename(name: &str) -> String {
@@ -62,7 +63,13 @@ pub async fn save_album_changes(mut album: Album) -> Result<Album, AppError> {
             };
 
             let safe_title = sanitize_filename(&album.title);
-            let new_folder_name = format!("{}{}", year_str, safe_title).trim().to_string();
+
+            // Clean existing year prefix from title if present to avoid duplication
+            // Pattern: Starts with (YYYY) followed by optional space
+            let re = Regex::new(r"^\(\d{4}\)\s*").unwrap();
+            let clean_title = re.replace(&safe_title, "");
+
+            let new_folder_name = format!("{}{}", year_str, clean_title).trim().to_string();
 
             let current_folder_name = current_folder.file_name().unwrap().to_string_lossy();
 
@@ -87,17 +94,36 @@ pub async fn save_album_changes(mut album: Album) -> Result<Album, AppError> {
                 // Update cover path if it was inside the folder
                 if let Some(cover) = &album.cover_path {
                     let cover_path = PathBuf::from(cover);
+                    let mut updated = false;
+
+                    // Strategy 1: Path prefix replacement
                     if cover_path.starts_with(current_folder) {
                         // Reconstruct path
                         if let Ok(relative) = cover_path.strip_prefix(current_folder) {
                             album.cover_path =
                                 Some(new_folder_path.join(relative).to_string_lossy().to_string());
+                            updated = true;
+                        }
+                    }
+
+                    // Strategy 2: If prefix failed (e.g. symlinks or path mismatch), try filename in new folder
+                    if !updated {
+                        if let Some(file_name) = cover_path.file_name() {
+                            let candidate = new_folder_path.join(file_name);
+                            // We assume that since we renamed the folder, the file is there
+                            // We can check existence to be sure, but if we just renamed, it should be there
+                            if candidate.exists() {
+                                album.cover_path = Some(candidate.to_string_lossy().to_string());
+                            }
                         }
                     }
                 }
             }
         }
     }
+
+    // 4. Re-evaluate album status (Clean/Dirty)
+    ScannerService::evaluate_album_status(&mut album);
 
     Ok(album)
 }

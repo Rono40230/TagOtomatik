@@ -26,8 +26,8 @@ const libraryStore = useLibraryStore();
     <AlbumSidebar 
       :album="album"
       @update:title="(val) => { album.title = val; libraryStore.updateAlbumTracksField(album.id, 'album', val); }"
-      @update:artist="album.artist = $event"
-      @update:year="album.year = $event"
+      @update:artist="(val) => { album.artist = val; libraryStore.updateAlbumTracksField(album.id, 'artist', val); libraryStore.updateAlbumTracksField(album.id, 'album_artist', val); }"
+      @update:year="(val) => { album.year = val; libraryStore.updateAlbumTracksField(album.id, 'year', val); }"
       @update:genre="libraryStore.updateAlbumTracksField(album.id, 'genre', $event)"
       @change-cover="emit('change-cover')"
     />

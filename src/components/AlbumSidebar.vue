@@ -60,13 +60,8 @@ onUnmounted(() => {
 });
 watch(() => props.album.path, checkJunkFiles);
 
-const GENRES = [
-    "Acid Jazz", "B.O. de Films", "Blues", "Chansons Française", "Disco",
-    "Electronique", "Flamenco", "Folk", "Funk", "Jazz", "Musique Afriquaine",
-    "Musique Andine", "Musique Brésilienne", "Musique Classique", "Musique Cubaine",
-    "Musique Franco-Hispanique", "New-Wave", "Pop", "Rap", "Reggae", "Rock",
-    "Soul", "Top 50", "Trip-Hop", "Zouk"
-];
+import { GENRES } from '../constants';
+
 
 // Computed property to get the common album tag from tracks
 const commonAlbumTag = computed(() => {
@@ -75,6 +70,19 @@ const commonAlbumTag = computed(() => {
   }
   return props.album.title; // Fallback
 });
+
+function cycleGenre(direction: 1 | -1) {
+    const current = props.album.tracks[0]?.genre || "";
+    let index = GENRES.indexOf(current);
+    
+    if (index === -1) {
+        index = direction === 1 ? 0 : GENRES.length - 1;
+    } else {
+        index = (index + direction + GENRES.length) % GENRES.length;
+    }
+    
+    emit('update:genre', GENRES[index]);
+}
 </script>
 
 <template>
@@ -124,14 +132,25 @@ const commonAlbumTag = computed(() => {
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-400 uppercase mb-1">Genre</label>
-              <select 
-                :value="album.tracks[0]?.genre || ''"
-                @change="$emit('update:genre', ($event.target as HTMLSelectElement).value)"
-                class="w-full h-10 p-2.5 border border-gray-600 rounded-lg text-sm bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-              >
-                <option value=""></option>
-                <option v-for="genre in GENRES" :key="genre" :value="genre">{{ genre }}</option>
-              </select>
+              <div class="relative">
+                <input 
+                  :value="album.tracks[0]?.genre || ''"
+                  @input="$emit('update:genre', ($event.target as HTMLInputElement).value)"
+                  class="w-full h-10 p-2.5 pr-8 border border-gray-600 rounded-lg text-sm bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+                />
+                <div class="absolute right-1 top-1 bottom-1 flex flex-col justify-center">
+                  <button 
+                    @click="cycleGenre(-1)" 
+                    class="text-xs text-gray-400 hover:text-white focus:outline-none leading-none p-0.5 hover:bg-gray-600 rounded"
+                    tabindex="-1"
+                  >▲</button>
+                  <button 
+                    @click="cycleGenre(1)" 
+                    class="text-xs text-gray-400 hover:text-white focus:outline-none leading-none p-0.5 hover:bg-gray-600 rounded"
+                    tabindex="-1"
+                  >▼</button>
+                </div>
+              </div>
             </div>
         </div>
 

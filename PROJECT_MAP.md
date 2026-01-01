@@ -1,5 +1,5 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: jeu. 01 janv. 2026 16:39:39 CET
+Date: jeu. 01 janv. 2026 18:42:19 CET
 
 ## 📂 Arborescence (Backend)
 ```
@@ -63,6 +63,7 @@ src
     ToastContainer.vue
     TrackList.vue
     TrackRow.vue
+  constants.ts
   main.ts
   router
     index.ts

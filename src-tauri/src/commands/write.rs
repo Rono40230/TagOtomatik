@@ -33,17 +33,16 @@ pub async fn save_album_changes(mut album: Album) -> Result<Album, AppError> {
         let parent = old_path
             .parent()
             .ok_or_else(|| AppError::Io("Invalid path".into()))?;
-        let ext = old_path.extension().unwrap_or_default().to_string_lossy();
 
-        let track_num = track.track_number.unwrap_or(0);
-        let title = sanitize_filename(&track.title);
-        let new_filename = format!("{:02} - {}.{}", track_num, title, ext);
+        // Use the filename provided by the frontend (user edits)
+        // We assume the user knows what they are doing regarding extensions
+        let new_filename = track.filename.clone();
 
-        if new_filename != track.filename {
-            let new_path = parent.join(&new_filename);
+        let new_path = parent.join(&new_filename);
+
+        // Check if path has changed (ignoring case if needed, but here strict equality)
+        if new_path != old_path {
             IOService::rename_file(old_path.to_str().unwrap(), new_path.to_str().unwrap())?;
-
-            track.filename = new_filename;
             track.path = new_path.to_string_lossy().to_string();
         }
     }
@@ -55,9 +54,15 @@ pub async fn save_album_changes(mut album: Album) -> Result<Album, AppError> {
 
         // Check if we have a parent folder to rename within
         if let Some(parent_of_folder) = current_folder.parent() {
-            let artist = sanitize_filename(&album.artist);
-            let album_title = sanitize_filename(&album.title);
-            let new_folder_name = format!("{} - {}", artist, album_title);
+            // Use RenamerService logic for consistency: (Year) Album Title
+            // Note: We use album.title directly as it now contains the correct title from UI
+            let year_str = match album.year {
+                Some(y) if y > 0 => format!("({}) ", y),
+                _ => String::new(),
+            };
+
+            let safe_title = sanitize_filename(&album.title);
+            let new_folder_name = format!("{}{}", year_str, safe_title).trim().to_string();
 
             let current_folder_name = current_folder.file_name().unwrap().to_string_lossy();
 
@@ -67,6 +72,9 @@ pub async fn save_album_changes(mut album: Album) -> Result<Album, AppError> {
                     current_folder.to_str().unwrap(),
                     new_folder_path.to_str().unwrap(),
                 )?;
+
+                // Update Album Path
+                album.path = new_folder_path.to_string_lossy().to_string();
 
                 // Update all track paths
                 for track in &mut album.tracks {

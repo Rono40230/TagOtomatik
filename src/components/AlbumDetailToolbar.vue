@@ -69,10 +69,6 @@ async function handleSaveAll() {
           <button @click="goBack" class="p-2 hover:bg-gray-700 rounded-full transition-colors text-gray-300">
             ⬅️
           </button>
-          <h1 class="text-xl font-bold text-white truncate max-w-md">
-            {{ pageTitle }}
-            <span class="text-gray-400 font-normal text-sm ml-2">{{ pageSubtitle }}</span>
-          </h1>
         </div>
         
         <div class="flex gap-2">

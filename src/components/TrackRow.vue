@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Track } from '../types';
+import { watch } from 'vue';
 
 const props = defineProps<{
   track: Track,
@@ -11,6 +12,23 @@ const emit = defineEmits<{
   (e: 'play', track: Track): void
   (e: 'add-to-playlist', path: string): void
 }>();
+
+// Sync Filename -> Title
+watch(() => props.track.filename, (newVal) => {
+  if (!newVal) return;
+  
+  // Remove extension
+  let title = newVal.replace(/\.[^/.]+$/, "");
+  
+  // Remove "NN - " prefix (e.g. "01 - ", "1 - ")
+  title = title.replace(/^\d+\s*-\s*/, "");
+  
+  if (props.track.title !== title) {
+      props.track.title = title;
+  }
+});
+
+import { GENRES } from '../constants';
 
 // Helper pour détecter les changements
 function hasChanged(field: keyof Track): boolean {
@@ -132,21 +150,26 @@ function getOriginalValue(field: keyof Track): string {
 
     <!-- Genre -->
     <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-300">
-      <div class="relative">
-        <div v-if="hasChanged('genre')" class="text-xs text-red-400 line-through mb-0.5">
-          {{ getOriginalValue('genre') }}
-        </div>
-        <input 
-          v-model="track.genre"
-          class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
-          :class="{'text-green-400 font-medium': hasChanged('genre')}"
-        />
-      </div>
+      <input 
+        v-model="track.genre"
+        class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
+        :class="{'text-green-400 font-medium': hasChanged('genre')}"
+      />
     </td>
 
-    <!-- Duration -->
-    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-400 text-right">
-      {{ Math.floor(track.duration_sec / 60) }}:{{ (track.duration_sec % 60).toString().padStart(2, '0') }}
+    <!-- Year -->
+    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-300 text-right">
+      <div class="relative">
+        <div v-if="hasChanged('year')" class="text-xs text-red-400 line-through mb-0.5">
+          {{ getOriginalValue('year') }}
+        </div>
+        <input 
+          type="number"
+          v-model.number="track.year"
+          class="w-16 bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none text-right"
+          :class="{'text-green-400 font-medium': hasChanged('year')}"
+        />
+      </div>
     </td>
 
     <!-- Actions -->

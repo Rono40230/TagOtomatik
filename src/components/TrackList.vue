@@ -168,9 +168,9 @@ function stopResize() {
               <span v-if="sortColumn === 'genre'" class="ml-1">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
               <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown.stop="startResize($event, 'genre')"></div>
             </th>
-            <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider relative group cursor-pointer hover:bg-gray-800" :style="{ width: colWidths.duration + 'px' }" @click="toggleSort('duration_sec')">
-              Durée
-              <span v-if="sortColumn === 'duration_sec'" class="ml-1">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider relative group cursor-pointer hover:bg-gray-800" :style="{ width: colWidths.duration + 'px' }" @click="toggleSort('year')">
+              Année
+              <span v-if="sortColumn === 'year'" class="ml-1">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
               <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500 z-10" @mousedown.stop="startResize($event, 'duration')"></div>
             </th>
             <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider relative group" :style="{ width: colWidths.actions + 'px' }">

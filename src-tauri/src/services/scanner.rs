@@ -167,9 +167,7 @@ impl ScannerService {
         chemin_dossier: &str,
     ) -> Result<Vec<String>, AppError> {
         let mut junk_files = Vec::new();
-        let whitelist_ext = [
-            "mp3", "flac", "ogg", "m4a", "wav", "jpg", "jpeg", "png", "m3u", "m3u8", "pls",
-        ];
+        let audio_ext = ["mp3", "flac", "ogg", "m4a", "wav"];
 
         let path = Path::new(chemin_dossier);
         if !path.exists() || !path.is_dir() {
@@ -180,20 +178,22 @@ impl ScannerService {
             let entry = entry.map_err(|e| AppError::Io(e.to_string()))?;
             let path = entry.path();
             if path.is_file() {
-                let is_whitelisted = if let Some(ext) = path.extension() {
+                let file_name = path.file_name().unwrap_or_default().to_string_lossy();
+                let lower_name = file_name.to_lowercase();
+
+                // Règle stricte : On garde uniquement les fichiers audio et "cover.jpg" (strictement minuscule)
+                let is_audio = if let Some(ext) = path.extension() {
                     let ext_str = ext.to_string_lossy().to_lowercase();
-                    whitelist_ext.contains(&ext_str.as_str())
+                    audio_ext.contains(&ext_str.as_str())
                 } else {
                     false
                 };
 
-                if !is_whitelisted {
-                    junk_files.push(
-                        path.file_name()
-                            .unwrap_or_default()
-                            .to_string_lossy()
-                            .to_string(),
-                    );
+                // Seul "cover.jpg" est autorisé. "Cover.jpg", "COVER.jpg" etc. sont considérés comme inutiles.
+                let is_cover = file_name == "cover.jpg";
+
+                if !is_audio && !is_cover {
+                    junk_files.push(file_name.to_string());
                 }
             }
         }

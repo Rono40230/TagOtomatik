@@ -135,47 +135,9 @@ impl CleanerService {
 
     /// Nettoie le dossier (fichiers indésirables et dossiers vides)
     pub fn clean_directory(&self, album_path: &Path) {
-        let junk_extensions = [
-            "nfo",
-            "m3u",
-            "txt",
-            "url",
-            "sfv",
-            "ini",
-            "db",
-            "ds_store",
-            "thumbs.db",
-            "png",
-            "tmp",
-            "temp",
-            "bak",
-            "log",
-            "md5",
-            "pdf",
-            "doc",
-            "docx",
-            "gif",
-            "bmp",
-        ];
-        let junk_files = [
-            "desktop.ini",
-            ".fuse_hidden",
-            "._metadata",
-            "#recycle",
-            "recycle.bin",
-            ".ds_store",
-            "thumbs.db",
-            "folder.jpg",
-            "albumartsmall.jpg",
-            ".nomedia",
-            "ehthumbs.db",
-            "ehthumbs_vista.db",
-            "image.db",
-        ];
+        let audio_ext = ["mp3", "flac", "ogg", "m4a", "wav"];
 
-        // Patterns with wildcards (handled manually): albumart_*_large.jpg, albumart_*_small.jpg, ._*
-
-        // Pass 1: Delete junk files recursively
+        // Pass 1: Delete junk files recursively (Strict Whitelist Logic)
         let mut dirs_to_check = vec![album_path.to_path_buf()];
         while let Some(dir) = dirs_to_check.pop() {
             if let Ok(entries) = fs::read_dir(&dir) {
@@ -184,36 +146,21 @@ impl CleanerService {
                     if path.is_dir() {
                         dirs_to_check.push(path);
                     } else {
-                        let name = path
-                            .file_name()
-                            .and_then(|n| n.to_str())
-                            .unwrap_or("")
-                            .to_lowercase();
+                        let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+
                         let ext = path
                             .extension()
                             .and_then(|e| e.to_str())
                             .unwrap_or("")
                             .to_lowercase();
 
-                        // Check exact matches
-                        if junk_files.contains(&name.as_str())
-                            || junk_extensions.contains(&ext.as_str())
-                        {
-                            let _ = fs::remove_file(&path);
-                            continue;
-                        }
+                        // Règle stricte : On garde uniquement les fichiers audio et "cover.jpg"
+                        let is_audio = audio_ext.contains(&ext.as_str());
+                        let is_cover = name == "cover.jpg"; // Strict case check
 
-                        // Check wildcard patterns
-                        if name.starts_with("albumart_")
-                            && (name.ends_with("_large.jpg") || name.ends_with("_small.jpg"))
-                        {
+                        if !is_audio && !is_cover {
+                            // C'est un fichier inutile, on supprime
                             let _ = fs::remove_file(&path);
-                            continue;
-                        }
-
-                        if name.starts_with("._") {
-                            let _ = fs::remove_file(&path);
-                            continue;
                         }
                     }
                 }

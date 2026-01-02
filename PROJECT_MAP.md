@@ -1,5 +1,5 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: jeu. 01 janv. 2026 20:23:09 CET
+Date: ven. 02 janv. 2026 19:00:14 CET
 
 ## 📂 Arborescence (Backend)
 ```
@@ -89,18 +89,14 @@ src
 ## 🦀 Interfaces Publiques (Rust)
 Liste des fonctions publiques et structs exposés :
 ```rust
-lib.rs:pub fn run() {
 models/track.rs:pub struct Track {
 models/album.rs:pub enum AlbumStatus {
 models/album.rs:pub struct Album {
 models/error.rs:pub enum AppError {
-models/exception.rs:pub struct CaseException {
 models/playlist.rs:pub struct Playlist {
 models/playlist.rs:pub struct PlaylistTrack {
+models/exception.rs:pub struct CaseException {
 services/audio.rs:pub struct AudioService;
-services/scanner.rs:pub struct ScannerService;
-services/processor.rs:pub struct MetadataProcessorService;
-services/exception.rs:pub struct ExceptionService;
 services/io.rs:pub struct IOService;
 services/cover.rs:pub struct CoverResult {
 services/cover.rs:pub struct CoverService {
@@ -110,8 +106,12 @@ services/player.rs:pub enum PlayerCommand {
 services/player.rs:pub struct AudioPlayerState {
 services/cleaner.rs:pub struct CleanerService;
 services/renamer.rs:pub struct RenamerService;
+services/exception.rs:pub struct ExceptionService;
+services/processor.rs:pub struct MetadataProcessorService;
+services/scanner.rs:pub struct ScannerService;
 commands/cover.rs:pub struct CoverServiceState(pub Mutex<CoverService>);
 commands/playlist.rs:pub struct PlaylistServiceState(pub Mutex<PlaylistService>);
 commands/history.rs:pub fn get_scan_history(db: State<Database>) -> Result<Vec<String>, String> {
 db/database.rs:pub struct Database {
+lib.rs:pub fn run() {
 ```

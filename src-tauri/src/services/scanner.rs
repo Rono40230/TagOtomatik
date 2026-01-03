@@ -179,7 +179,7 @@ impl ScannerService {
             let path = entry.path();
             if path.is_file() {
                 let file_name = path.file_name().unwrap_or_default().to_string_lossy();
-                let lower_name = file_name.to_lowercase();
+                let _lower_name = file_name.to_lowercase();
 
                 // Règle stricte : On garde uniquement les fichiers audio et "cover.jpg" (strictement minuscule)
                 let is_audio = if let Some(ext) = path.extension() {

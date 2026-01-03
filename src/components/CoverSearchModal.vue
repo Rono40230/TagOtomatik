@@ -18,11 +18,20 @@ interface CoverResult {
   url: string
   source: string
   size?: [number, number]
+  preview_data?: number[]
 }
 
 const results = ref<CoverResult[]>([])
 const loading = ref(false)
 const toast = useToastStore()
+
+function getPreviewUrl(res: CoverResult) {
+  if (res.preview_data) {
+    const blob = new Blob([new Uint8Array(res.preview_data)], { type: 'image/jpeg' });
+    return URL.createObjectURL(blob);
+  }
+  return res.url;
+}
 
 async function search() {
   loading.value = true
@@ -48,7 +57,14 @@ function select(url: string) {
 }
 
 // Auto-search on open
-import { watch } from 'vue'
+import { watch, onMounted } from 'vue'
+
+onMounted(() => {
+  if (props.isOpen) {
+    search()
+  }
+})
+
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
     search()
@@ -69,7 +85,7 @@ watch(() => props.isOpen, (newVal) => {
       <div class="p-6 overflow-y-auto flex-1">
         <div v-if="loading" class="flex flex-col items-center justify-center h-64">
           <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
-          <p class="mt-4 text-slate-400">Recherche sur MusicBrainz...</p>
+          <p class="mt-4 text-slate-400">Recherche sur MusicBrainz, iTunes, Deezer...</p>
         </div>
 
         <div v-else-if="results.length > 0" class="grid grid-cols-3 gap-4">
@@ -79,7 +95,13 @@ watch(() => props.isOpen, (newVal) => {
             class="group relative aspect-square bg-slate-800 rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-primary transition-all"
             @click="select(res.url)"
           >
-            <img :src="res.url" class="w-full h-full object-cover" loading="lazy" />
+            <img :src="getPreviewUrl(res)" class="w-full h-full object-cover" loading="lazy" />
+            
+            <!-- Source Badge -->
+            <div class="absolute top-2 right-2 bg-black/70 text-xs text-white px-2 py-1 rounded backdrop-blur-sm">
+              {{ res.source }}
+            </div>
+
             <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
               <span class="bg-primary text-white px-3 py-1 rounded-full text-sm font-medium">Choisir</span>
             </div>

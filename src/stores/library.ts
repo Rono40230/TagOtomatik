@@ -151,6 +151,32 @@ export const useLibraryStore = defineStore('library', () => {
         });
     }
 
+    async function refreshAlbum(albumId: string) {
+        const index = albums.value.findIndex(a => a.id === albumId);
+        if (index === -1) return;
+        
+        const album = albums.value[index];
+        isLoading.value = true;
+        try {
+            // Re-scan just this album's folder
+            const result = await invoke<Album[]>('scan_directory', { path: album.path });
+            if (result.length > 0) {
+                // Find the matching album in results
+                const updated = result.find(a => a.path === album.path) || result[0];
+                albums.value[index] = updated;
+                
+                // Update original backup if it exists
+                if (originalAlbums.value.has(albumId)) {
+                    originalAlbums.value.set(albumId, JSON.parse(JSON.stringify(updated)));
+                }
+            }
+        } catch (e: unknown) {
+            // Silent fail or toast
+        } finally {
+            isLoading.value = false;
+        }
+    }
+
     return {
         albums,
         currentPath,
@@ -164,6 +190,7 @@ export const useLibraryStore = defineStore('library', () => {
         hasPendingCorrection,
         saveAlbum,
         removeAlbum,
-        updateAlbumTracksField
+        updateAlbumTracksField,
+        refreshAlbum
     };
 });

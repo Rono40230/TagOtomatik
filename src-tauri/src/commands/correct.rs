@@ -1,5 +1,5 @@
 use crate::db::Database;
-use crate::models::{Album, AppError};
+use crate::models::{Album, AlbumStatus, AppError};
 use crate::services::{
     AudioService, CleanerService, ExceptionService, MetadataProcessorService, RenamerService,
 };
@@ -163,8 +163,19 @@ pub async fn apply_auto_correct(mut album: Album) -> Result<Album, AppError> {
     // 4. Handle Cover Image (Recursive Search)
     cleaner.handle_cover_image(album_path);
 
+    // Update cover_path in the struct to reflect the new location
+    let target_cover = album_path.join("cover.jpg");
+    if target_cover.exists() {
+        album.cover_path = Some(target_cover.to_string_lossy().to_string());
+    } else {
+        album.cover_path = None;
+    }
+
     // 5. Clean Directory (Delete junk, empty folders)
     cleaner.clean_directory(album_path);
+
+    // 6. Update Status
+    album.status = AlbumStatus::Clean;
 
     Ok(album)
 }

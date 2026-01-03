@@ -13,6 +13,7 @@ const emit = defineEmits<{
   (e: 'update:year', value: number): void
   (e: 'update:genre', value: string): void
   (e: 'change-cover'): void
+  (e: 'search-cover'): void
 }>();
 
 const coverUrl = ref<string | null>(null);
@@ -103,6 +104,13 @@ function cycleGenre(direction: 1 | -1) {
           </div>
       </div>
       
+      <button 
+        @click="$emit('search-cover')"
+        class="w-full mb-6 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-sm"
+      >
+        🔍 Lancer la recherche d'une pochette
+      </button>
+
       <div class="space-y-4">
         <div>
           <label class="block text-xs font-medium text-gray-400 uppercase mb-1">Album</label>

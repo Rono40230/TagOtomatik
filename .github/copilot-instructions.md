@@ -16,7 +16,7 @@ Tu DOIS respecter :
 1.  **Reformuler** la demande de l'utilisateur.
 2.  Coder + Tester localement.
 3.  **NE JAMAIS** commiter toi-même.
-4.  Utiliser `./scripts/sentinel.sh` pour vérifier la non-régression en temps réel.
+4.  Le script `./scripts/sentinel.sh` est toujours en exécution dans un terminal Fedora pour vérifier la non-régression en temps réel, en cas d'alerte l'utilisateur copie/colle les alertes à l'IA
 
 ### Phase 2 : Validation (Tu valides)
 Quand l'utilisateur dit "valide tout" ou "commit" :

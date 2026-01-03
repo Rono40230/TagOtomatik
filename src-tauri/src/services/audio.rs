@@ -1,5 +1,7 @@
 use lofty::ItemKey;
-use lofty::{Accessor, AudioFile, ParseOptions, Probe, TagExt, TaggedFileExt};
+use lofty::{
+    Accessor, AudioFile, MimeType, ParseOptions, Picture, PictureType, Probe, TagExt, TaggedFileExt,
+};
 use std::path::Path;
 
 use crate::models::{AppError, Track};
@@ -99,6 +101,43 @@ impl AudioService {
 
         tag.save_to_path(path)
             .map_err(|e| AppError::Audio(format!("Erreur d'écriture: {}", e)))?;
+
+        Ok(())
+    }
+    pub fn definir_cover(&self, track_path: &str, cover_path: &str) -> Result<(), AppError> {
+        let path = Path::new(track_path);
+
+        let mut tagged_file = Probe::open(path)
+            .map_err(|e| AppError::Audio(format!("Erreur d'ouverture: {}", e)))?
+            .read()
+            .map_err(|e| AppError::Audio(format!("Erreur de lecture: {}", e)))?;
+
+        let tag = match tagged_file.primary_tag_mut() {
+            Some(primary_tag) => primary_tag,
+            None => {
+                let first_tag_type = tagged_file.file_type().primary_tag_type();
+                tagged_file.insert_tag(lofty::Tag::new(first_tag_type));
+                tagged_file.primary_tag_mut().unwrap()
+            }
+        };
+
+        // Lire le fichier image
+        let img_data = std::fs::read(cover_path)
+            .map_err(|e| AppError::Audio(format!("Erreur lecture cover: {}", e)))?;
+
+        // Créer l'objet Picture
+        // On assume JPEG car le CoverService convertit tout en JPEG
+        let picture =
+            Picture::new_unchecked(PictureType::CoverFront, MimeType::Jpeg, None, img_data);
+
+        // Supprimer les anciennes covers
+        tag.remove_picture_type(PictureType::CoverFront);
+
+        // Ajouter la nouvelle
+        tag.push_picture(picture);
+
+        tag.save_to_path(path)
+            .map_err(|e| AppError::Audio(format!("Erreur sauvegarde tags: {}", e)))?;
 
         Ok(())
     }

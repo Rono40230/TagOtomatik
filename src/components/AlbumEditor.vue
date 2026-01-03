@@ -13,6 +13,7 @@ const emit = defineEmits<{
   (e: 'play', track: Track): void
   (e: 'add-to-playlist', trackPath: string): void
   (e: 'change-cover'): void
+  (e: 'search-cover'): void
 }>();
 
 const libraryStore = useLibraryStore();
@@ -30,6 +31,7 @@ const libraryStore = useLibraryStore();
       @update:year="(val) => { album.year = val; libraryStore.updateAlbumTracksField(album.id, 'year', val); }"
       @update:genre="libraryStore.updateAlbumTracksField(album.id, 'genre', $event)"
       @change-cover="emit('change-cover')"
+      @search-cover="emit('search-cover')"
     />
 
     <div class="flex-1 min-w-0 flex flex-col h-full">

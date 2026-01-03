@@ -33,6 +33,7 @@ const showPlaylistModal = ref(false);
 const showCoverModal = ref(false);
 const selectedTrackForPlaylist = ref<string | null>(null);
 const activeAlbumForCover = ref<Album | null>(null);
+const componentKey = ref(0);
 
 // Si aucun album trouvé, retour
 onMounted(() => {
@@ -69,15 +70,18 @@ async function handleCoverSelect(url: string) {
   
   try {
     libraryStore.isLoading = true;
-    const localPath = await invoke<string>('download_cover', { 
-      url, 
-      albumPath: targetAlbum.path 
+    await invoke<string>('apply_cover', { 
+      albumPath: targetAlbum.path,
+      coverUrl: url
     });
     
-    // Update local state
-    targetAlbum.cover_path = localPath;
-    // Force image refresh hack
-    targetAlbum.cover_path = `${localPath}?t=${Date.now()}`;
+    // Refresh album data from disk to get updated tracks and cover
+    await libraryStore.refreshAlbum(targetAlbum.id);
+    
+    // Force UI refresh (re-mount components to reload images)
+    componentKey.value++;
+    
+    toastStore.success('Pochette appliquée à tout l\'album');
     
   } catch (e) {
     toastStore.error(String(e));
@@ -121,10 +125,12 @@ function playTrack(track: Track) {
       </template>
       <template v-else-if="albums.length === 1">
         <AlbumEditor 
+          :key="componentKey"
           :album="albums[0]"
           @play="playTrack"
           @add-to-playlist="openPlaylistModal"
           @change-cover="openCoverModal(albums[0])"
+          @search-cover="openCoverModal(albums[0])"
         />
       </template>
     </main>
@@ -165,8 +171,8 @@ function playTrack(track: Track) {
     <CoverSearchModal 
       v-if="showCoverModal && activeAlbumForCover"
       :is-open="showCoverModal"
-      :artist="activeAlbumForCover.artist"
-      :album="activeAlbumForCover.title"
+      :artist="activeAlbumForCover.tracks[0]?.album_artist || activeAlbumForCover.tracks[0]?.artist || activeAlbumForCover.artist"
+      :album="activeAlbumForCover.tracks[0]?.album || activeAlbumForCover.title"
       @close="showCoverModal = false"
       @select="handleCoverSelect"
     />

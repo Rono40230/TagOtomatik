@@ -39,6 +39,11 @@ impl AudioService {
 
         let mut track = Track::new(chemin.to_string(), filename);
 
+        // Récupérer la taille du fichier
+        if let Ok(metadata) = std::fs::metadata(path) {
+            track.size = metadata.len();
+        }
+
         // Remplir les propriétés audio
         track.duration_sec = properties.duration().as_secs();
         track.bit_rate = properties.audio_bitrate();

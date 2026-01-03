@@ -10,8 +10,7 @@ export interface Track {
     genre?: string;
     duration_sec: number;
     format: string;
-    bit_rate?: number;
-    has_cover: boolean;
+    bit_rate?: number;    size: number;    has_cover: boolean;
     is_modified: boolean;
     original_metadata?: Track;
 }

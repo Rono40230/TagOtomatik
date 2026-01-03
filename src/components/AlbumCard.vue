@@ -3,6 +3,7 @@ import type { Album } from '../types';
 import { computed, ref, onMounted, watch, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { invoke } from '@tauri-apps/api/core';
+import ConversionModal from './ConversionModal.vue';
 
 const props = defineProps<{
   album: Album,
@@ -11,11 +12,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'delete', id: string): void,
-  (e: 'toggle-selection', id: string, selected: boolean): void
+  (e: 'toggle-selection', id: string, selected: boolean): void,
+  (e: 'refresh', id: string): void
 }>();
 
 const router = useRouter();
 const coverUrl = ref<string | null>(null);
+const showConversionModal = ref(false);
 
 async function loadCover() {
   if (!props.album.cover_path) {
@@ -102,8 +105,8 @@ function openDetail() {
   router.push(`/album/${props.album.id}`);
 }
 
-function goToConverter() {
-  router.push('/converter');
+function openConversionModal() {
+  showConversionModal.value = true;
 }
 </script>
 
@@ -112,6 +115,13 @@ function goToConverter() {
     @click="openDetail"
     class="bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer border border-gray-700 relative group"
   >
+    <ConversionModal 
+      :album="album" 
+      :isOpen="showConversionModal" 
+      @close="showConversionModal = false"
+      @refresh="emit('refresh', album.id)"
+    />
+
     <!-- Selection Checkbox -->
     <div class="absolute top-2 left-2 z-20" @click.stop>
       <input 
@@ -153,7 +163,7 @@ function goToConverter() {
       <div class="mt-3 flex justify-between items-center text-xs text-gray-400">
         <span>{{ album.year || '????' }}</span>
         <button 
-          @click.stop="goToConverter"
+          @click.stop="openConversionModal"
           class="bg-gray-700 hover:bg-blue-600 hover:text-white px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1 group/format"
           title="Convertir le format"
         >

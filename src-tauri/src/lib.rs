@@ -7,7 +7,7 @@ use commands::cover::CoverServiceState;
 use commands::playlist::PlaylistServiceState;
 use commands::{
     add_exception, apply_auto_correct,
-    converter::convert_file,
+    converter::{convert_file, delete_file},
     cover::{apply_cover, download_cover, read_cover, read_track_cover, search_cover},
     delete_exception, get_exceptions,
     history::get_scan_history,
@@ -67,6 +67,7 @@ pub fn run() {
             create_playlist,
             add_to_playlist,
             convert_file,
+            delete_file,
             get_scan_history
         ])
         .run(tauri::generate_context!())

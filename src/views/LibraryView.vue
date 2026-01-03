@@ -126,6 +126,7 @@ function openSelected() {
           :selected="selectedAlbumIds.has(album.id)"
           @toggle-selection="toggleSelection"
           @delete="deleteAlbum"
+          @refresh="libraryStore.refreshAlbum"
         />
       </div>
     </main>

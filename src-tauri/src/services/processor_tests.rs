@@ -48,6 +48,7 @@ fn test_nettoyer_track_parentheses() {
         duration_sec: 0,
         format: "".to_string(),
         bit_rate: None,
+        size: 0,
         has_cover: false,
         original_metadata: None,
         is_modified: false,

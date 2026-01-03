@@ -14,6 +14,7 @@ pub struct Track {
     pub duration_sec: u64,
     pub format: String, // "mp3", "flac"...
     pub bit_rate: Option<u32>,
+    pub size: u64, // Taille en octets
     pub has_cover: bool,
 
     // État de modification
@@ -36,6 +37,7 @@ impl Track {
             duration_sec: 0,
             format: String::new(),
             bit_rate: None,
+            size: 0,
             has_cover: false,
             original_metadata: None,
             is_modified: false,

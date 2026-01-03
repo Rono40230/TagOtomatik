@@ -23,3 +23,8 @@ pub async fn convert_file(input_path: String, bitrate: String) -> Result<String,
 
     Ok(output_str)
 }
+
+#[tauri::command]
+pub async fn delete_file(path: String) -> Result<(), String> {
+    std::fs::remove_file(path).map_err(|e| e.to_string())
+}

@@ -1,5 +1,5 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: sam. 03 janv. 2026 17:33:30 CET
+Date: sam. 03 janv. 2026 18:42:16 CET
 
 ## 📂 Arborescence (Backend)
 ```
@@ -56,6 +56,9 @@ src
     AlbumEditor.vue
     AlbumSidebar.vue
     ConfirmationModal.vue
+    ConversionModal.vue
+    ConversionSummary.vue
+    ConversionTrackRow.vue
     CoverSearchModal.vue
     MultiAlbumEditor.vue
     MultiAlbumSidebar.vue

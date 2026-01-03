@@ -4,6 +4,7 @@ import { computed, ref, onMounted, watch, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { invoke } from '@tauri-apps/api/core';
 import ConversionModal from './ConversionModal.vue';
+import PlaylistModal from './PlaylistModal.vue';
 
 const props = defineProps<{
   album: Album,
@@ -19,6 +20,7 @@ const emit = defineEmits<{
 const router = useRouter();
 const coverUrl = ref<string | null>(null);
 const showConversionModal = ref(false);
+const showPlaylistModal = ref(false);
 
 async function loadCover() {
   if (!props.album.cover_path) {
@@ -101,12 +103,28 @@ const formatBadge = computed(() => {
   return Array.from(formats).join('/');
 });
 
+const formatColor = computed(() => {
+  const formats = new Set(props.album.tracks.map(t => t.format.toUpperCase()));
+  
+  if (formats.has('FLAC')) {
+    return 'bg-red-900 text-red-100 border-red-700 hover:bg-red-800';
+  }
+  if (formats.has('MP3')) {
+    return 'bg-green-900 text-green-100 border-green-700 hover:bg-green-800';
+  }
+  return 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600';
+});
+
 function openDetail() {
   router.push(`/album/${props.album.id}`);
 }
 
 function openConversionModal() {
   showConversionModal.value = true;
+}
+
+function openPlaylistModal() {
+  showPlaylistModal.value = true;
 }
 </script>
 
@@ -119,6 +137,13 @@ function openConversionModal() {
       :album="album" 
       :isOpen="showConversionModal" 
       @close="showConversionModal = false"
+      @refresh="emit('refresh', album.id)"
+    />
+
+    <PlaylistModal
+      :album="album"
+      :isOpen="showPlaylistModal"
+      @close="showPlaylistModal = false"
       @refresh="emit('refresh', album.id)"
     />
 
@@ -164,13 +189,22 @@ function openConversionModal() {
         <span>{{ album.year || '????' }}</span>
         <button 
           @click.stop="openConversionModal"
-          class="bg-gray-700 hover:bg-blue-600 hover:text-white px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1 group/format"
+          :class="['px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1 group/format border', formatColor]"
           title="Convertir le format"
         >
           {{ formatBadge }}
           <span class="hidden group-hover/format:inline text-[10px]">➜ MP3</span>
         </button>
         <div class="flex items-center gap-2">
+          <button 
+            @click.stop="openPlaylistModal"
+            class="text-gray-400 hover:text-green-400 transition-colors p-1 hover:bg-gray-700 rounded"
+            title="Générer une playlist"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
           <span>{{ album.tracks.length }} pistes</span>
           <button 
             @click.stop="emit('delete', album.id)"

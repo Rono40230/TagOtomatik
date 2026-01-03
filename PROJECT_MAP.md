@@ -1,5 +1,5 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: sam. 03 janv. 2026 18:42:16 CET
+Date: sam. 03 janv. 2026 20:22:51 CET
 
 ## 📂 Arborescence (Backend)
 ```
@@ -63,6 +63,7 @@ src
     MultiAlbumEditor.vue
     MultiAlbumSidebar.vue
     PlayerBar.vue
+    PlaylistModal.vue
     ToastContainer.vue
     TrackList.vue
     TrackRow.vue
@@ -84,7 +85,6 @@ src
     ConverterView.vue
     Dashboard.vue
     LibraryView.vue
-    PlaylistView.vue
     SettingsView.vue
   vite-env.d.ts
 ```
@@ -98,6 +98,7 @@ models/album.rs:pub struct Album {
 models/error.rs:pub enum AppError {
 models/playlist.rs:pub struct Playlist {
 models/playlist.rs:pub struct PlaylistTrack {
+models/playlist.rs:pub struct PlaylistOptions {
 models/exception.rs:pub struct CaseException {
 services/audio.rs:pub struct AudioService;
 services/io.rs:pub struct IOService;

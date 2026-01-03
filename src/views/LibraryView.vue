@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { useLibraryStore } from '../stores/library';
+import { useToastStore } from '../stores/toast';
 import AlbumCard from '../components/AlbumCard.vue';
 import ConfirmationModal from '../components/ConfirmationModal.vue';
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
+import { open } from '@tauri-apps/plugin-dialog';
 
 const libraryStore = useLibraryStore();
+const toast = useToastStore();
 const router = useRouter();
 const selectedAlbumIds = ref<Set<string>>(new Set());
 
@@ -17,6 +20,24 @@ const modalAction = ref<() => void>(() => {});
 
 function goBack() {
   router.push('/');
+}
+
+async function addFolder() {
+  try {
+    const selected = await open({
+      directory: true,
+      multiple: true,
+    });
+
+    if (selected) {
+      const paths = Array.isArray(selected) ? selected : [selected];
+      for (const path of paths) {
+         await libraryStore.scanDirectory(path);
+      }
+    }
+  } catch (err) {
+    toast.error(`Erreur lors de l'ajout du dossier: ${err}`);
+  }
 }
 
 function toggleSelection(id: string, selected: boolean) {
@@ -86,6 +107,16 @@ function openSelected() {
         </div>
         
         <div class="flex gap-2">
+          <button 
+            @click="addFolder"
+            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 border border-gray-600"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Ajouter des albums
+          </button>
+
           <template v-if="selectedAlbumIds.size > 0">
             <button 
               @click="openSelected"
@@ -100,12 +131,6 @@ function openSelected() {
               🗑️ Supprimer ({{ selectedAlbumIds.size }})
             </button>
           </template>
-          <router-link 
-            to="/playlists"
-            class="px-4 py-2 bg-gray-700 border border-gray-600 text-gray-200 rounded-lg hover:bg-gray-600 text-sm font-medium transition-colors"
-          >
-            📂 Playlists
-          </router-link>
           <!-- Actions globales (Filtrer, Trier...) -->
         </div>
       </div>

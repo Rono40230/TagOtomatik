@@ -114,7 +114,11 @@ function close() {
 
 <template>
   <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" @click.stop="close">
-    <div class="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden relative" @click.stop>
+    <div 
+      class="bg-gray-900 border border-gray-700 rounded-xl w-full flex flex-col shadow-2xl overflow-hidden relative transition-all duration-300 ease-in-out"
+      :class="showSummary ? 'max-w-sm' : 'max-w-2xl max-h-[90vh]'"
+      @click.stop
+    >
       
       <!-- Summary Overlay -->
       <ConversionSummary 
@@ -123,7 +127,8 @@ function close() {
         @close="close" 
       />
 
-      <!-- Header -->
+      <template v-else>
+        <!-- Header -->
       <div class="p-4 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
         <div>
           <h3 class="text-lg font-bold text-white">Conversion MP3</h3>
@@ -207,6 +212,7 @@ function close() {
           </button>
         </div>
       </div>
+      </template>
 
     </div>
   </div>

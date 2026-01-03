@@ -3,7 +3,6 @@ import Dashboard from '../views/Dashboard.vue'
 import LibraryView from '../views/LibraryView.vue'
 import AlbumDetailView from '../views/AlbumDetailView.vue'
 import SettingsView from '../views/SettingsView.vue'
-import PlaylistView from '../views/PlaylistView.vue'
 import ConverterView from '../views/ConverterView.vue'
 
 const routes = [
@@ -16,11 +15,6 @@ const routes = [
     path: '/library',
     name: 'Library',
     component: LibraryView
-  },
-  {
-    path: '/playlists',
-    name: 'Playlists',
-    component: PlaylistView
   },
   {
     path: '/converter',

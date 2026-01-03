@@ -107,4 +107,91 @@ impl PlaylistService {
         writeln!(file, "{}", track_path).map_err(|e| e.to_string())?;
         Ok(())
     }
+
+    pub fn write_playlist(
+        &self,
+        options: &crate::models::playlist::PlaylistOptions,
+    ) -> Result<String, String> {
+        let extension = options.format.to_lowercase();
+        let file_name = if options
+            .filename
+            .to_lowercase()
+            .ends_with(&format!(".{}", extension))
+        {
+            options.filename.clone()
+        } else {
+            format!("{}.{}", options.filename, extension)
+        };
+
+        let output_path = Path::new(&options.album_path).join(&file_name);
+        let mut file = File::create(&output_path).map_err(|e| e.to_string())?;
+
+        // Header
+        match extension.as_str() {
+            "m3u" | "m3u8" => {
+                if options.use_extended_info {
+                    writeln!(file, "#EXTM3U").map_err(|e| e.to_string())?;
+                }
+            }
+            "pls" => {
+                writeln!(file, "[playlist]").map_err(|e| e.to_string())?;
+                writeln!(file, "NumberOfEntries={}", options.tracks.len())
+                    .map_err(|e| e.to_string())?;
+            }
+            _ => {}
+        }
+
+        for (i, track) in options.tracks.iter().enumerate() {
+            // 1. Resolve Path
+            let track_path_str = if options.path_type == "Relative" {
+                pathdiff::diff_paths(&track.path, &options.album_path)
+                    .ok_or("Could not create relative path")?
+                    .to_string_lossy()
+                    .to_string()
+            } else {
+                track.path.clone()
+            };
+
+            // 2. Apply Separator
+            let final_path = match options.path_separator.as_str() {
+                "Slash" => track_path_str.replace('\\', "/"),
+                "Backslash" => track_path_str.replace('/', "\\"),
+                _ => track_path_str,
+            };
+
+            // 3. Write Entry
+            match extension.as_str() {
+                "m3u" | "m3u8" => {
+                    if options.use_extended_info {
+                        writeln!(
+                            file,
+                            "#EXTINF:{},{} - {}",
+                            track.duration_sec, track.artist, track.title
+                        )
+                        .map_err(|e| e.to_string())?;
+                    }
+                    writeln!(file, "{}", final_path).map_err(|e| e.to_string())?;
+                }
+                "pls" => {
+                    let idx = i + 1;
+                    writeln!(file, "File{}={}", idx, final_path).map_err(|e| e.to_string())?;
+                    if options.use_extended_info {
+                        writeln!(file, "Title{}={} - {}", idx, track.artist, track.title)
+                            .map_err(|e| e.to_string())?;
+                        writeln!(file, "Length{}={}", idx, track.duration_sec)
+                            .map_err(|e| e.to_string())?;
+                    }
+                }
+                _ => {
+                    writeln!(file, "{}", final_path).map_err(|e| e.to_string())?;
+                }
+            }
+        }
+
+        if extension == "pls" {
+            writeln!(file, "Version=2").map_err(|e| e.to_string())?;
+        }
+
+        Ok(output_path.to_string_lossy().to_string())
+    }
 }

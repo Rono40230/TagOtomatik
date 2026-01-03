@@ -5,8 +5,7 @@ import type { Album, Track } from '../types';
 import { useToastStore } from './toast';
 
 // Extracted helper for error handling
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function handleError(e: unknown, toast: any, context: string): string {
+function handleError(e: unknown, toast: ReturnType<typeof useToastStore>, context: string): string {
     const errMsg = e instanceof Error ? e.message : String(e);
     toast.error(`${context}: ${errMsg}`);
     return errMsg;

@@ -5227,6 +5227,7 @@ dependencies = [
  "lazy_static",
  "lofty",
  "md5",
+ "pathdiff",
  "regex",
  "reqwest 0.13.1",
  "rodio",

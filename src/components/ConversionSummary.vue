@@ -9,7 +9,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="absolute inset-0 z-20 bg-gray-900/95 backdrop-blur flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+  <div class="flex flex-col items-center justify-center p-6 text-center animate-fade-in w-full">
     <div 
       class="w-16 h-16 rounded-full flex items-center justify-center mb-4 shadow-lg"
       :class="stats.errors === 0 ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'"

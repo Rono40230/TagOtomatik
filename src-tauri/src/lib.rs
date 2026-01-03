@@ -12,7 +12,9 @@ use commands::{
     delete_exception, get_exceptions,
     history::get_scan_history,
     player::{pause_track, play_track, resume_track, set_volume, stop_track},
-    playlist::{add_to_playlist, create_playlist, get_playlist_tracks, list_playlists},
+    playlist::{
+        add_to_playlist, create_playlist, get_playlist_tracks, list_playlists, write_playlist,
+    },
     preview_auto_correct, save_album_changes, scan_directory, scan_junk,
 };
 use db::Database;
@@ -66,6 +68,7 @@ pub fn run() {
             get_playlist_tracks,
             create_playlist,
             add_to_playlist,
+            write_playlist,
             convert_file,
             delete_file,
             get_scan_history

@@ -43,3 +43,12 @@ pub async fn add_to_playlist(
     let service = state.0.lock().unwrap();
     service.add_track_to_playlist(&playlist_path, &track_path)
 }
+
+#[tauri::command]
+pub async fn write_playlist(
+    state: State<'_, PlaylistServiceState>,
+    options: crate::models::playlist::PlaylistOptions,
+) -> Result<String, String> {
+    let service = state.0.lock().unwrap();
+    service.write_playlist(&options)
+}

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Track } from '../types';
 import { watch } from 'vue';
+import { useSmartDiff } from '../composables/useSmartDiff';
 
 const props = defineProps<{
   track: Track,
@@ -11,7 +12,11 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'play', track: Track): void
   (e: 'add-to-playlist', path: string): void
+  (e: 'suggest-exception', data: { original: string; corrected: string; category: string }): void
 }>();
+
+// Exception Detection Logic
+const { onFocus, onBlur } = useSmartDiff(emit);
 
 // Sync Filename -> Title (Manual Input Only)
 function onFilenameInput() {
@@ -88,6 +93,8 @@ function getOriginalValue(field: keyof Track): string {
       <input 
         type="number" 
         v-model.number="track.track_number"
+        @focus="onFocus(track.track_number)"
+        @blur="onBlur('track_number', track.track_number)"
         class="w-12 bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none text-center"
         :class="{'text-yellow-400': hasChanged('track_number')}"
       />
@@ -102,6 +109,8 @@ function getOriginalValue(field: keyof Track): string {
         <input 
           v-model="track.filename"
           @input="onFilenameInput"
+          @focus="onFocus(track.filename)"
+          @blur="onBlur('filename', track.filename)"
           class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
           :class="{'text-green-400 font-medium': hasChanged('filename')}"
         />
@@ -116,6 +125,8 @@ function getOriginalValue(field: keyof Track): string {
         </div>
         <input 
           v-model="track.title"
+          @focus="onFocus(track.title)"
+          @blur="onBlur('title', track.title)"
           class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
           :class="{'text-green-400 font-medium': hasChanged('title')}"
         />
@@ -130,6 +141,8 @@ function getOriginalValue(field: keyof Track): string {
         </div>
         <input 
           v-model="track.artist"
+          @focus="onFocus(track.artist)"
+          @blur="onBlur('artist', track.artist)"
           class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
           :class="{'text-green-400 font-medium': hasChanged('artist')}"
         />
@@ -144,6 +157,8 @@ function getOriginalValue(field: keyof Track): string {
         </div>
         <input 
           v-model="track.album_artist"
+          @focus="onFocus(track.album_artist)"
+          @blur="onBlur('album_artist', track.album_artist)"
           class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
           :class="{'text-green-400 font-medium': hasChanged('album_artist')}"
         />
@@ -158,6 +173,8 @@ function getOriginalValue(field: keyof Track): string {
         </div>
         <input 
           v-model="track.album"
+          @focus="onFocus(track.album)"
+          @blur="onBlur('album', track.album)"
           class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
           :class="{'text-green-400 font-medium': hasChanged('album')}"
         />
@@ -168,6 +185,8 @@ function getOriginalValue(field: keyof Track): string {
     <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-300">
       <input 
         v-model="track.genre"
+        @focus="onFocus(track.genre)"
+        @blur="onBlur('genre', track.genre)"
         class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
         :class="{'text-green-400 font-medium': hasChanged('genre')}"
       />
@@ -182,6 +201,8 @@ function getOriginalValue(field: keyof Track): string {
         <input 
           type="number"
           v-model.number="track.year"
+          @focus="onFocus(track.year)"
+          @blur="onBlur('year', track.year)"
           class="w-16 bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none text-right"
           :class="{'text-green-400 font-medium': hasChanged('year')}"
         />
@@ -203,18 +224,6 @@ function getOriginalValue(field: keyof Track): string {
 
 <style scoped>
 /* Hide spinner for number inputs */
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
-  -webkit-appearance: none; 
-  margin: 0; 
-}
-input[type=number] {
-  -moz-appearance: textfield;
-}
-</style>
-
-<style scoped>
-/* Hide spinners for number input */
 input[type=number]::-webkit-inner-spin-button, 
 input[type=number]::-webkit-outer-spin-button { 
   -webkit-appearance: none; 

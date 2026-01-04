@@ -1,6 +1,7 @@
 use super::*;
 use crate::models::Track;
-use std::collections::HashMap;
+use crate::services::processor::ReplacementRule;
+use regex::Regex;
 
 #[test]
 fn test_corriger_casse() {
@@ -54,8 +55,8 @@ fn test_nettoyer_track_parentheses() {
         is_modified: false,
     };
 
-    let exceptions = HashMap::new();
-    processor.nettoyer_track(&mut track, &exceptions);
+    let rules = Vec::new();
+    processor.nettoyer_track(&mut track, &rules);
 
     assert_eq!(track.title, "Song title");
     assert_eq!(track.album, "Album title");
@@ -108,4 +109,45 @@ fn test_format_track_filename() {
         renamer.format_track_filename(Some(1), "Title/With/Slash", "mp3"),
         "01 - Title-With-Slash.mp3"
     );
+}
+
+#[test]
+fn test_appliquer_exceptions_regex() {
+    let processor = MetadataProcessorService::new();
+    let mut track = Track {
+        path: "".to_string(),
+        filename: "".to_string(),
+        title: "Hung et and I".to_string(),
+        artist: "Artist".to_string(),
+        album_artist: "".to_string(),
+        album: "Album".to_string(),
+        year: None,
+        track_number: None,
+        genre: None,
+        duration_sec: 0,
+        format: "".to_string(),
+        bit_rate: None,
+        size: 0,
+        has_cover: false,
+        original_metadata: None,
+        is_modified: false,
+    };
+
+    let mut rules = Vec::new();
+    // Rule 1: "et" -> "&"
+    rules.push(ReplacementRule {
+        category: "global".to_string(),
+        regex: Regex::new(r"(?i)\bet\b").unwrap(),
+        replacement: "&".to_string(),
+    });
+    // Rule 2: "and" -> "&"
+    rules.push(ReplacementRule {
+        category: "global".to_string(),
+        regex: Regex::new(r"(?i)\band\b").unwrap(),
+        replacement: "&".to_string(),
+    });
+
+    processor.appliquer_exceptions(&mut track, &rules);
+
+    assert_eq!(track.title, "Hung & & I");
 }

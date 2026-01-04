@@ -2,7 +2,6 @@ use crate::models::Track;
 use crate::services::dictionaries::{ABBREVIATIONS, ROMAN_NUMERALS};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::collections::HashMap;
 
 lazy_static! {
     // Regex pour nettoyer les espaces multiples
@@ -22,6 +21,12 @@ lazy_static! {
     static ref RE_TRACK_PREFIX: Regex = Regex::new(r"^\d+[\.\-\s]+\s*").unwrap();
 }
 
+pub struct ReplacementRule {
+    pub category: String,
+    pub regex: Regex,
+    pub replacement: String,
+}
+
 pub struct MetadataProcessorService;
 
 impl Default for MetadataProcessorService {
@@ -35,7 +40,30 @@ impl MetadataProcessorService {
         Self
     }
 
-    pub fn nettoyer_filename(&self, filename: &str, track_number: Option<u32>) -> String {
+    pub fn apply_rules_to_string(
+        &self,
+        text: &str,
+        category: &str,
+        rules: &Vec<ReplacementRule>,
+    ) -> String {
+        let mut result = text.to_string();
+        for rule in rules {
+            if rule.category == "global" || rule.category == category {
+                result = rule
+                    .regex
+                    .replace_all(&result, rule.replacement.as_str())
+                    .to_string();
+            }
+        }
+        result
+    }
+
+    pub fn nettoyer_filename(
+        &self,
+        filename: &str,
+        track_number: Option<u32>,
+        rules: &Vec<ReplacementRule>,
+    ) -> String {
         let path = std::path::Path::new(filename);
         let stem = path
             .file_stem()
@@ -58,7 +86,10 @@ impl MetadataProcessorService {
         // 5. Correction de la casse
         cleaned_stem = self.corriger_casse(&cleaned_stem);
 
-        // 6. Ajouter le préfixe standardisé si un numéro est fourni
+        // 6. Appliquer les exceptions (Global + Title car le filename est souvent le titre)
+        cleaned_stem = self.apply_rules_to_string(&cleaned_stem, "title", rules);
+
+        // 7. Ajouter le préfixe standardisé si un numéro est fourni
         if let Some(n) = track_number {
             cleaned_stem = format!("{:02} - {}", n, cleaned_stem);
         }
@@ -70,11 +101,7 @@ impl MetadataProcessorService {
         }
     }
 
-    pub fn nettoyer_track(
-        &self,
-        track: &mut Track,
-        exceptions: &HashMap<(String, String), String>,
-    ) {
+    pub fn nettoyer_track(&self, track: &mut Track, rules: &Vec<ReplacementRule>) {
         track.title = self.nettoyer_chaine(&track.title);
         track.artist = self.nettoyer_chaine(&track.artist);
         track.album = self.nettoyer_chaine(&track.album);
@@ -87,16 +114,6 @@ impl MetadataProcessorService {
         track.title = RE_SPACES.replace_all(&track.title, " ").trim().to_string();
         track.album = RE_SPACES.replace_all(&track.album, " ").trim().to_string();
 
-        // Rule: Artist -> Album Artist if empty
-        // Note: Track struct might not have album_artist field visible here?
-        // Let's check Track definition. If it's missing, we can't do it.
-        // Assuming Track has it or we skip it.
-        // Checking models/track.rs content previously read...
-        // Track struct has: title, artist, album, year, track_number, genre...
-        // It does NOT have album_artist in the struct shown earlier!
-        // We must skip this rule or add the field.
-        // For now, let's stick to what we have.
-
         // Genre cleaning
         if let Some(g) = &track.genre {
             let clean_g = self.nettoyer_chaine(g);
@@ -105,9 +122,6 @@ impl MetadataProcessorService {
                 // Try to parse number inside
                 let inner = &clean_g[1..clean_g.len() - 1];
                 if inner.parse::<u32>().is_ok() {
-                    // TODO: Map ID to string. For now, keep as is or clear?
-                    // Python script converted it. We don't have the map yet.
-                    // Let's just normalize casing for now.
                     self.normalize_genre(&clean_g)
                 } else {
                     self.normalize_genre(&clean_g)
@@ -123,7 +137,7 @@ impl MetadataProcessorService {
         // track.artist = self.corriger_casse(&track.artist);
         track.album = self.corriger_casse(&track.album);
 
-        self.appliquer_exceptions(track, exceptions);
+        self.appliquer_exceptions(track, rules);
 
         // Marquer comme modifié si différent de l'original
         if let Some(original) = &track.original_metadata {
@@ -137,11 +151,7 @@ impl MetadataProcessorService {
         }
     }
 
-    pub fn nettoyer_album_metadata(
-        &self,
-        track: &mut Track,
-        exceptions: &HashMap<(String, String), String>,
-    ) {
+    pub fn nettoyer_album_metadata(&self, track: &mut Track, rules: &Vec<ReplacementRule>) {
         // 1. Nettoyage de base
         track.album = self.nettoyer_chaine(&track.album);
 
@@ -155,39 +165,13 @@ impl MetadataProcessorService {
         track.album = self.corriger_casse(&track.album);
 
         // 5. Exceptions
-        if let Some(corr) = exceptions.get(&("global".to_string(), track.album.to_lowercase())) {
-            track.album = corr.clone();
-        }
-        if let Some(corr) = exceptions.get(&("album".to_string(), track.album.to_lowercase())) {
-            track.album = corr.clone();
-        }
+        track.album = self.apply_rules_to_string(&track.album, "album", rules);
     }
 
-    fn appliquer_exceptions(
-        &self,
-        track: &mut Track,
-        exceptions: &HashMap<(String, String), String>,
-    ) {
-        // Artist
-        if let Some(corr) = exceptions.get(&("global".to_string(), track.artist.to_lowercase())) {
-            track.artist = corr.clone();
-        }
-        if let Some(corr) = exceptions.get(&("artist".to_string(), track.artist.to_lowercase())) {
-            track.artist = corr.clone();
-        }
-
-        // Album
-        if let Some(corr) = exceptions.get(&("global".to_string(), track.album.to_lowercase())) {
-            track.album = corr.clone();
-        }
-        if let Some(corr) = exceptions.get(&("album".to_string(), track.album.to_lowercase())) {
-            track.album = corr.clone();
-        }
-
-        // Title
-        if let Some(corr) = exceptions.get(&("global".to_string(), track.title.to_lowercase())) {
-            track.title = corr.clone();
-        }
+    pub fn appliquer_exceptions(&self, track: &mut Track, rules: &Vec<ReplacementRule>) {
+        track.artist = self.apply_rules_to_string(&track.artist, "artist", rules);
+        track.album = self.apply_rules_to_string(&track.album, "album", rules);
+        track.title = self.apply_rules_to_string(&track.title, "title", rules);
     }
 
     fn nettoyer_chaine(&self, input: &str) -> String {
@@ -198,7 +182,7 @@ impl MetadataProcessorService {
 
         // 2. Normaliser les connecteurs
         cleaned = RE_FEAT.replace_all(&cleaned, " feat. ").to_string();
-        cleaned = RE_AND.replace_all(&cleaned, " & ").to_string();
+        // cleaned = RE_AND.replace_all(&cleaned, " & ").to_string();
 
         // 3. Nettoyer les espaces (trim + collapse)
         cleaned = RE_SPACES.replace_all(&cleaned, " ").to_string();

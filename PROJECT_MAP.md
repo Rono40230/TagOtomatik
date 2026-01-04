@@ -1,10 +1,11 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: sam. 03 janv. 2026 20:22:51 CET
+Date: dim. 04 janv. 2026 10:46:19 CET
 
 ## 📂 Arborescence (Backend)
 ```
   src
     commands
+      apply.rs
       converter.rs
       correct.rs
       cover.rs
@@ -82,7 +83,6 @@ src
     index.ts
   views
     AlbumDetailView.vue
-    ConverterView.vue
     Dashboard.vue
     LibraryView.vue
     SettingsView.vue
@@ -111,6 +111,7 @@ services/player.rs:pub struct AudioPlayerState {
 services/cleaner.rs:pub struct CleanerService;
 services/renamer.rs:pub struct RenamerService;
 services/exception.rs:pub struct ExceptionService;
+services/processor.rs:pub struct ReplacementRule {
 services/processor.rs:pub struct MetadataProcessorService;
 services/scanner.rs:pub struct ScannerService;
 commands/cover.rs:pub struct CoverServiceState(pub Mutex<CoverService>);

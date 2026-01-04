@@ -15,8 +15,8 @@ LAST_CHECKSUM=""
 
 while true; do
     # Calculer une signature de tous les fichiers sources (Rust + Vue + TS)
-    # On ignore les fichiers cachés et le dossier target
-    CURRENT_CHECKSUM=$(find . -type f \( -name "*.rs" -o -name "*.vue" -o -name "*.ts" \) -not -path "*/target/*" -not -path "*/.*" -exec md5sum {} + 2>/dev/null | sort | md5sum)
+    # On ignore les fichiers cachés, le dossier target et node_modules
+    CURRENT_CHECKSUM=$(find . -type f \( -name "*.rs" -o -name "*.vue" -o -name "*.ts" \) -not -path "*/target/*" -not -path "*/node_modules/*" -not -path "*/dist/*" -not -path "*/.*" -exec md5sum {} + 2>/dev/null | sort | md5sum)
 
     if [ "$LAST_CHECKSUM" != "$CURRENT_CHECKSUM" ]; then
         if [ -n "$LAST_CHECKSUM" ]; then

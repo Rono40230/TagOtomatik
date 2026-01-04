@@ -95,14 +95,6 @@ async function openFolder() {
       <!-- Secondary Actions -->
       <div class="mt-8 flex gap-4">
         <router-link 
-          to="/converter"
-          class="px-4 py-2 text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2 hover:bg-white/5 rounded-lg"
-        >
-          <span class="text-lg">🔄</span>
-          Convertisseur
-        </router-link>
-
-        <router-link 
           to="/settings"
           class="px-4 py-2 text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2 hover:bg-white/5 rounded-lg"
         >

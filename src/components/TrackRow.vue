@@ -13,8 +13,9 @@ const emit = defineEmits<{
   (e: 'add-to-playlist', path: string): void
 }>();
 
-// Sync Filename -> Title
-watch(() => props.track.filename, (newVal) => {
+// Sync Filename -> Title (Manual Input Only)
+function onFilenameInput() {
+  const newVal = props.track.filename;
   if (!newVal) return;
   
   // Remove extension
@@ -23,10 +24,11 @@ watch(() => props.track.filename, (newVal) => {
   // Remove "NN - " prefix (e.g. "01 - ", "1 - ")
   title = title.replace(/^\d+\s*-\s*/, "");
   
+  // Only update if different to avoid cursor jumping if user is editing title
   if (props.track.title !== title) {
       props.track.title = title;
   }
-});
+}
 
 // Watch for any changes to mark as modified
 watch(() => props.track, (newVal) => {
@@ -99,6 +101,7 @@ function getOriginalValue(field: keyof Track): string {
         </div>
         <input 
           v-model="track.filename"
+          @input="onFilenameInput"
           class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
           :class="{'text-green-400 font-medium': hasChanged('filename')}"
         />

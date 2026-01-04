@@ -66,26 +66,60 @@ function goToLibrary() {
 
           <!-- Animated Vinyl Icon -->
           <div class="self-center relative w-48 h-48 flex items-center justify-center">
-            <!-- Ripple Effect -->
-            <div class="absolute inset-0 rounded-full border border-cyan-500/20 scale-75 group-hover:scale-150 group-hover:opacity-0 transition-all duration-1000 ease-out"></div>
-            <div class="absolute inset-0 rounded-full border border-cyan-500/20 scale-75 group-hover:scale-125 group-hover:opacity-0 transition-all duration-1000 delay-100 ease-out"></div>
-            
-            <!-- Vinyl Disc -->
-            <div class="w-40 h-40 rounded-full bg-gray-950 border-4 border-gray-800 shadow-2xl flex items-center justify-center group-hover:animate-spin-slow transition-transform">
-              <!-- Grooves -->
-              <div class="absolute inset-2 rounded-full border border-gray-800/50"></div>
-              <div class="absolute inset-4 rounded-full border border-gray-800/50"></div>
-              <div class="absolute inset-6 rounded-full border border-gray-800/50"></div>
-              <!-- Label -->
-              <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600"></div>
+            <!-- Sleeve (Decorated - Abstract Fluid) -->
+            <div class="absolute w-40 h-40 rounded-sm shadow-2xl z-20 flex flex-col items-center justify-center overflow-hidden bg-black border border-blue-300 group-hover:-translate-x-1 transition-transform duration-500">
+               <!-- Fluid Background -->
+               <div class="absolute inset-0 bg-slate-900"></div>
+               
+               <!-- Fluid Shapes SVG -->
+               <div class="absolute inset-0 flex items-center justify-center overflow-hidden">
+                 <svg viewBox="0 0 100 100" class="w-full h-full opacity-90">
+                   <defs>
+                     <linearGradient id="fluidGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                       <stop offset="0%" stop-color="#06b6d4" /> <!-- Cyan -->
+                       <stop offset="100%" stop-color="#3b82f6" /> <!-- Blue -->
+                     </linearGradient>
+                     <linearGradient id="fluidGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+                       <stop offset="0%" stop-color="#ec4899" /> <!-- Pink -->
+                       <stop offset="100%" stop-color="#8b5cf6" /> <!-- Purple -->
+                     </linearGradient>
+                     <filter id="blurFilter">
+                       <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+                     </filter>
+                   </defs>
+                   
+                   <!-- Blob 1 -->
+                   <path d="M20 30 Q40 10 60 30 T90 50 T60 80 T20 60 T20 30" fill="url(#fluidGrad1)" opacity="0.8" filter="url(#blurFilter)" />
+                   
+                   <!-- Blob 2 -->
+                   <path d="M70 20 Q90 40 70 70 T30 80 T10 50 T40 10 T70 20" fill="url(#fluidGrad2)" opacity="0.7" filter="url(#blurFilter)" style="mix-blend-mode: screen;" />
+                   
+                   <!-- Fine Lines -->
+                   <path d="M10 50 Q30 20 50 50 T90 50" fill="none" stroke="white" stroke-width="0.5" opacity="0.3" />
+                   <path d="M10 60 Q40 90 70 60 T90 30" fill="none" stroke="white" stroke-width="0.5" opacity="0.2" />
+                 </svg>
+               </div>
+               
+               <!-- Typography -->
+               <div class="relative z-10 flex flex-col items-center justify-center">
+                 <span class="text-[1.5rem] font-light text-white tracking-[0.2em] mix-blend-overlay">ARTIST</span>
+                 <span class="text-[0.7rem] text-cyan-200 tracking-[0.4em] font-medium opacity-80">ALBUM</span>
+               </div>
             </div>
-            
-            <!-- Play Icon Overlay -->
-            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 4L12 20L20 12L12 4Z" /> <!-- Simple Play/Arrow shape -->
-                <path d="M4 12H12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-              </svg>
+
+            <!-- Vinyl Disc (Slides out) -->
+            <div class="absolute w-36 h-36 rounded-full bg-black border-4 border-gray-900 shadow-2xl flex items-center justify-center z-10 transition-transform duration-700 ease-out group-hover:translate-x-20 group-hover:rotate-180">
+              <!-- Grooves -->
+              <div class="absolute inset-1 rounded-full border border-gray-800/40"></div>
+              <div class="absolute inset-3 rounded-full border border-gray-800/40"></div>
+              <div class="absolute inset-5 rounded-full border border-gray-800/40"></div>
+              <div class="absolute inset-7 rounded-full border border-gray-800/40"></div>
+              <!-- Label -->
+              <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center">
+                <div class="w-2 h-2 bg-black rounded-full"></div>
+              </div>
+              <!-- Shine -->
+              <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-white/5 to-transparent pointer-events-none"></div>
             </div>
           </div>
 
@@ -115,11 +149,11 @@ function goToLibrary() {
           <!-- Animated Equalizer Icon -->
           <div class="self-center relative w-48 h-32 flex items-end justify-center gap-2 pb-4">
             <!-- EQ Bars -->
-            <div class="w-4 bg-emerald-500/40 rounded-t-md h-8 group-hover:animate-eq-1 transition-all"></div>
-            <div class="w-4 bg-emerald-500/60 rounded-t-md h-16 group-hover:animate-eq-2 transition-all"></div>
-            <div class="w-4 bg-emerald-500/80 rounded-t-md h-12 group-hover:animate-eq-3 transition-all"></div>
-            <div class="w-4 bg-emerald-500/60 rounded-t-md h-20 group-hover:animate-eq-4 transition-all"></div>
-            <div class="w-4 bg-emerald-500/40 rounded-t-md h-10 group-hover:animate-eq-5 transition-all"></div>
+            <div class="w-4 bg-emerald-500/40 rounded-t-md h-8 animate-eq-1 transition-all"></div>
+            <div class="w-4 bg-emerald-500/60 rounded-t-md h-16 animate-eq-2 transition-all"></div>
+            <div class="w-4 bg-emerald-500/80 rounded-t-md h-12 animate-eq-3 transition-all"></div>
+            <div class="w-4 bg-emerald-500/60 rounded-t-md h-20 animate-eq-4 transition-all"></div>
+            <div class="w-4 bg-emerald-500/40 rounded-t-md h-10 animate-eq-5 transition-all"></div>
           </div>
 
           <div class="flex items-center text-sm font-medium text-emerald-400 opacity-60 group-hover:opacity-100 transition-opacity">

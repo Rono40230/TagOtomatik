@@ -11,6 +11,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'play', track: Track): void
   (e: 'add-to-playlist', path: string): void
+  (e: 'suggest-exception', data: { original: string; corrected: string; category: string }): void
 }>();
 
 // Column Resizing Logic
@@ -187,6 +188,7 @@ function stopResize() {
             :cover-url="trackCovers.get(track.path)"
             @play="emit('play', $event)"
             @add-to-playlist="emit('add-to-playlist', $event)"
+            @suggest-exception="emit('suggest-exception', $event)"
           />
         </tbody>
       </table>

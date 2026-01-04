@@ -1,5 +1,5 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: dim. 04 janv. 2026 10:57:49 CET
+Date: dim. 04 janv. 2026 16:40:04 CET
 
 ## 📂 Arborescence (Backend)
 ```
@@ -61,6 +61,8 @@ src
     ConversionSummary.vue
     ConversionTrackRow.vue
     CoverSearchModal.vue
+    DashboardTitle.vue
+    ExceptionDialog.vue
     MultiAlbumEditor.vue
     MultiAlbumSidebar.vue
     PlayerBar.vue
@@ -68,6 +70,8 @@ src
     ToastContainer.vue
     TrackList.vue
     TrackRow.vue
+  composables
+    useSmartDiff.ts
   constants.ts
   main.ts
   router

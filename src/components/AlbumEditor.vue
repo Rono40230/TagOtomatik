@@ -14,6 +14,7 @@ const emit = defineEmits<{
   (e: 'add-to-playlist', trackPath: string): void
   (e: 'change-cover'): void
   (e: 'search-cover'): void
+  (e: 'suggest-exception', data: { original: string; corrected: string; category: string }): void
 }>();
 
 const libraryStore = useLibraryStore();
@@ -45,6 +46,7 @@ const libraryStore = useLibraryStore();
         :tracks="album.tracks"
         @play="emit('play', $event)"
         @add-to-playlist="emit('add-to-playlist', $event)"
+        @suggest-exception="emit('suggest-exception', $event)"
       />
     </div>
   </div>

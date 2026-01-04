@@ -1,34 +1,15 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { open } from '@tauri-apps/plugin-dialog';
-import { invoke } from '@tauri-apps/api/core';
 import { useLibraryStore } from '../stores/library';
 import { useToastStore } from '../stores/toast';
 import { useRouter } from 'vue-router';
+import DashboardTitle from '../components/DashboardTitle.vue';
 
 const libraryStore = useLibraryStore();
 const toastStore = useToastStore();
 const router = useRouter();
 const isScanning = ref(false);
-const history = ref<string[]>([]);
-
-onMounted(async () => {
-  try {
-    history.value = await invoke('get_scan_history');
-  } catch (e) {
-    toastStore.error(String(e));
-  }
-});
-
-async function openHistory(path: string) {
-  isScanning.value = true;
-  await libraryStore.scanDirectory(path);
-  isScanning.value = false;
-  
-  if (libraryStore.albums.length > 0) {
-    router.push('/library');
-  }
-}
 
 async function openFolder() {
   try {
@@ -48,105 +29,137 @@ async function openFolder() {
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    toastStore.error(message);
+    toastStore.error(`Erreur: ${message}`);
     isScanning.value = false;
   }
+}
+
+function goToLibrary() {
+  router.push('/library');
 }
 </script>
 
 <template>
-  <div class="h-full flex flex-col items-center justify-center p-8 relative overflow-hidden">
-    <!-- Background Gradients -->
-    <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-      <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px]"></div>
-      <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px]"></div>
-    </div>
+  <div class="min-h-screen flex flex-col items-center justify-center p-8 relative overflow-hidden">
+    <!-- Background Ambient Glow -->
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-[128px] pointer-events-none"></div>
+    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-[128px] pointer-events-none"></div>
 
-    <div class="max-w-2xl w-full flex flex-col items-center text-center z-10">
-      <!-- Logo / Icon -->
-      <div class="mb-8 p-6 bg-app-surface/50 backdrop-blur-xl rounded-3xl border border-app-border shadow-2xl ring-1 ring-white/10">
-        <span class="text-6xl filter drop-shadow-lg">🎵</span>
-      </div>
+    <!-- Title Section (Glitch Equalizer) -->
+    <DashboardTitle />
 
-      <h1 class="mb-4 text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 tracking-tight">
-        TagOtomatik
-      </h1>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl w-full z-10">
       
-      <p class="mb-10 text-lg text-slate-400 max-w-md leading-relaxed">
-        L'outil ultime pour nettoyer, organiser et taguer votre bibliothèque musicale locale.
-      </p>
-      
-      <!-- Main Action -->
-      <button 
-        @click="openFolder" 
-        :disabled="isScanning || libraryStore.isLoading"
-        class="group relative w-full max-w-sm py-4 px-8 bg-primary hover:bg-primary-hover text-white rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0 overflow-hidden"
+      <!-- Card 1: Import (Vinyl/Waveform Theme) -->
+      <div 
+        @click="openFolder"
+        class="group relative h-96 rounded-[2rem] bg-gray-900/40 border border-white/5 p-8 cursor-pointer backdrop-blur-xl transition-all duration-500 hover:bg-gray-900/60 hover:border-cyan-500/30 hover:shadow-[0_0_40px_-10px_rgba(6,182,212,0.3)] overflow-hidden"
       >
-        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-        <div class="flex items-center justify-center gap-3">
-          <span v-if="isScanning || libraryStore.isLoading" class="animate-spin">⏳</span>
-          <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" />
-          </svg>
-          <span>{{ isScanning || libraryStore.isLoading ? 'Analyse en cours...' : 'Ouvrir un dossier' }}</span>
-        </div>
-      </button>
+        <!-- Hover Gradient Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        
+        <div class="relative h-full flex flex-col justify-between z-10">
+          <div class="space-y-2">
+            <h2 class="text-3xl font-bold text-white group-hover:text-cyan-400 transition-colors">Importer</h2>
+            <p class="text-gray-400 group-hover:text-gray-300 transition-colors">Scanner un nouveau dossier d'albums</p>
+          </div>
 
-      <!-- Secondary Actions -->
-      <div class="mt-8 flex gap-4">
-        <router-link 
-          to="/settings"
-          class="px-4 py-2 text-slate-400 hover:text-white text-sm font-medium transition-colors flex items-center gap-2 hover:bg-white/5 rounded-lg"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          Exceptions
-        </router-link>
-      </div>
-      
-      <div v-if="history.length > 0" class="mt-12 w-full max-w-md animate-fade-in-up">
-        <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Récemment ouverts</h3>
-        <div class="bg-white/5 rounded-xl overflow-hidden border border-white/10 backdrop-blur-sm">
-          <button 
-            v-for="path in history" 
-            :key="path"
-            @click="openHistory(path)"
-            class="w-full text-left px-4 py-3 text-sm text-slate-300 hover:bg-white/10 hover:text-white transition-all border-b border-white/5 last:border-0 truncate flex items-center gap-3 group"
-            :title="path"
-          >
-            <span class="opacity-50 group-hover:opacity-100 transition-opacity">📁</span>
-            <span class="truncate flex-1">{{ path }}</span>
-            <span class="opacity-0 group-hover:opacity-100 text-xs text-primary transition-opacity">Ouvrir →</span>
-          </button>
+          <!-- Animated Vinyl Icon -->
+          <div class="self-center relative w-48 h-48 flex items-center justify-center">
+            <!-- Ripple Effect -->
+            <div class="absolute inset-0 rounded-full border border-cyan-500/20 scale-75 group-hover:scale-150 group-hover:opacity-0 transition-all duration-1000 ease-out"></div>
+            <div class="absolute inset-0 rounded-full border border-cyan-500/20 scale-75 group-hover:scale-125 group-hover:opacity-0 transition-all duration-1000 delay-100 ease-out"></div>
+            
+            <!-- Vinyl Disc -->
+            <div class="w-40 h-40 rounded-full bg-gray-950 border-4 border-gray-800 shadow-2xl flex items-center justify-center group-hover:animate-spin-slow transition-transform">
+              <!-- Grooves -->
+              <div class="absolute inset-2 rounded-full border border-gray-800/50"></div>
+              <div class="absolute inset-4 rounded-full border border-gray-800/50"></div>
+              <div class="absolute inset-6 rounded-full border border-gray-800/50"></div>
+              <!-- Label -->
+              <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600"></div>
+            </div>
+            
+            <!-- Play Icon Overlay -->
+            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 4L12 20L20 12L12 4Z" /> <!-- Simple Play/Arrow shape -->
+                <path d="M4 12H12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="flex items-center text-sm font-medium text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity">
+            <span class="mr-2">Démarrer le scan</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </div>
         </div>
       </div>
-      
-      <div v-if="libraryStore.error" class="mt-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm backdrop-blur-sm animate-pulse">
-        {{ libraryStore.error }}
+
+      <!-- Card 2: Library (Equalizer/Stack Theme) -->
+      <div 
+        @click="goToLibrary"
+        class="group relative h-96 rounded-[2rem] bg-gray-900/40 border border-white/5 p-8 cursor-pointer backdrop-blur-xl transition-all duration-500 hover:bg-gray-900/60 hover:border-emerald-500/30 hover:shadow-[0_0_40px_-10px_rgba(16,185,129,0.3)] overflow-hidden"
+      >
+        <!-- Hover Gradient Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-bl from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+        <div class="relative h-full flex flex-col justify-between z-10">
+          <div class="space-y-2">
+            <h2 class="text-3xl font-bold text-white group-hover:text-emerald-400 transition-colors">Ma Collection</h2>
+            <p class="text-gray-400 group-hover:text-gray-300 transition-colors">Explorer et gérer vos albums</p>
+          </div>
+
+          <!-- Animated Equalizer Icon -->
+          <div class="self-center relative w-48 h-32 flex items-end justify-center gap-2 pb-4">
+            <!-- EQ Bars -->
+            <div class="w-4 bg-emerald-500/40 rounded-t-md h-8 group-hover:animate-eq-1 transition-all"></div>
+            <div class="w-4 bg-emerald-500/60 rounded-t-md h-16 group-hover:animate-eq-2 transition-all"></div>
+            <div class="w-4 bg-emerald-500/80 rounded-t-md h-12 group-hover:animate-eq-3 transition-all"></div>
+            <div class="w-4 bg-emerald-500/60 rounded-t-md h-20 group-hover:animate-eq-4 transition-all"></div>
+            <div class="w-4 bg-emerald-500/40 rounded-t-md h-10 group-hover:animate-eq-5 transition-all"></div>
+          </div>
+
+          <div class="flex items-center text-sm font-medium text-emerald-400 opacity-60 group-hover:opacity-100 transition-opacity">
+            <span class="mr-2">Ouvrir la bibliothèque</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </div>
+        </div>
       </div>
+
     </div>
     
-    <!-- Footer / Recent -->
-    <div class="absolute bottom-8 w-full max-w-2xl px-4">
-      <div v-if="history.length > 0" class="text-center">
-        <p class="text-xs text-slate-600 font-medium tracking-wider uppercase mb-3">Récemment ouverts</p>
-        <div class="flex flex-wrap justify-center gap-2">
-          <button 
-            v-for="path in history.slice(0, 3)" 
-            :key="path"
-            @click="openHistory(path)"
-            class="px-3 py-1 bg-white/10 hover:bg-white/20 text-slate-400 hover:text-white text-xs rounded-full transition-colors truncate max-w-[200px]"
-            :title="path"
-          >
-            {{ path.split('/').pop() }}
-          </button>
-        </div>
-      </div>
-      <div v-else class="text-center text-xs text-slate-600 font-medium tracking-wider uppercase">
-        Prêt à scanner
-      </div>
+    <!-- Loading Overlay -->
+    <div v-if="isScanning" class="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+      <div class="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mb-4"></div>
+      <p class="text-cyan-400 font-medium animate-pulse">Analyse en cours...</p>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Custom Animations */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+/* Equalizer Animations */
+@keyframes eq-bounce {
+  0%, 100% { height: 20%; }
+  50% { height: 90%; }
+}
+
+.group:hover .animate-eq-1 { animation: eq-bounce 0.8s ease-in-out infinite; }
+.group:hover .animate-eq-2 { animation: eq-bounce 1.2s ease-in-out infinite 0.1s; }
+.group:hover .animate-eq-3 { animation: eq-bounce 1.0s ease-in-out infinite 0.2s; }
+.group:hover .animate-eq-4 { animation: eq-bounce 1.4s ease-in-out infinite 0.1s; }
+.group:hover .animate-eq-5 { animation: eq-bounce 0.9s ease-in-out infinite 0.3s; }
+</style>

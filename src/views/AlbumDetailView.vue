@@ -6,7 +6,9 @@ import { useLibraryStore } from '../stores/library';
 import { usePlayerStore } from '../stores/player';
 import { usePlaylistStore } from '../stores/playlist';
 import { useToastStore } from '../stores/toast';
+import { useExceptionsStore } from '../stores/exceptions';
 import CoverSearchModal from '../components/CoverSearchModal.vue';
+import ExceptionDialog from '../components/ExceptionDialog.vue';
 import AlbumEditor from '../components/AlbumEditor.vue';
 import MultiAlbumEditor from '../components/MultiAlbumEditor.vue';
 import AlbumDetailToolbar from '../components/AlbumDetailToolbar.vue';
@@ -18,6 +20,7 @@ const libraryStore = useLibraryStore();
 const playerStore = usePlayerStore();
 const playlistStore = usePlaylistStore();
 const toastStore = useToastStore();
+const exceptionsStore = useExceptionsStore();
 
 const albums = computed(() => {
   if (route.name === 'MultiAlbumEdit') {
@@ -31,8 +34,10 @@ const albums = computed(() => {
 
 const showPlaylistModal = ref(false);
 const showCoverModal = ref(false);
+const showExceptionDialog = ref(false);
 const selectedTrackForPlaylist = ref<string | null>(null);
 const activeAlbumForCover = ref<Album | null>(null);
+const currentExceptionProposal = ref<{ original: string; corrected: string; category: string } | null>(null);
 const componentKey = ref(0);
 
 // Si aucun album trouvé, retour
@@ -99,6 +104,23 @@ function goBack() {
 function playTrack(track: Track) {
   playerStore.play(track);
 }
+
+function handleExceptionSuggestion(data: { original: string; corrected: string; category: string }) {
+  currentExceptionProposal.value = data;
+  showExceptionDialog.value = true;
+}
+
+async function confirmException(data: { original: string; corrected: string; category: string }) {
+  try {
+    await exceptionsStore.ajouterException(data.original, data.corrected, data.category);
+    toastStore.success(`Règle ajoutée : "${data.original}" -> "${data.corrected}"`);
+  } catch (e) {
+    toastStore.error("Erreur lors de l'ajout de l'exception");
+  } finally {
+    showExceptionDialog.value = false;
+    currentExceptionProposal.value = null;
+  }
+}
 </script>
 
 <template>
@@ -131,9 +153,18 @@ function playTrack(track: Track) {
           @add-to-playlist="openPlaylistModal"
           @change-cover="openCoverModal(albums[0])"
           @search-cover="openCoverModal(albums[0])"
+          @suggest-exception="handleExceptionSuggestion"
         />
       </template>
     </main>
+
+    <!-- Exception Dialog -->
+    <ExceptionDialog 
+      :is-open="showExceptionDialog"
+      :proposal="currentExceptionProposal"
+      @close="showExceptionDialog = false"
+      @confirm="confirmException"
+    />
 
     <!-- Playlist Selection Modal -->
     <div v-if="showPlaylistModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

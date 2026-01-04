@@ -2,6 +2,7 @@
 import { useLibraryStore } from '../stores/library';
 import { useToastStore } from '../stores/toast';
 import AlbumCard from '../components/AlbumCard.vue';
+import ImportCard from '../components/ImportCard.vue';
 import ConfirmationModal from '../components/ConfirmationModal.vue';
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
@@ -95,10 +96,16 @@ function openSelected() {
   <div class="min-h-screen bg-gray-900 text-white">
     <!-- Header -->
     <header class="bg-gray-800 shadow-sm sticky top-0 z-10 border-b border-gray-700">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div class="flex items-center gap-4">
-          <button @click="goBack" class="p-2 hover:bg-gray-700 rounded-full transition-colors text-gray-300">
-            ⬅️
+          <button 
+            @click="goBack" 
+            class="group p-2 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-cyan-500/50 hover:bg-gray-800 hover:shadow-[0_0_15px_-3px_rgba(6,182,212,0.4)] transition-all duration-300"
+            title="Retour"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-cyan-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
           </button>
           <h1 class="text-xl font-bold text-white">Bibliothèque</h1>
           <span class="bg-blue-900 text-blue-200 text-xs font-medium px-2.5 py-0.5 rounded-full">
@@ -106,7 +113,7 @@ function openSelected() {
           </span>
         </div>
         
-        <div class="flex gap-2">
+        <div class="flex gap-2 pr-36">
           <button 
             @click="addFolder"
             class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 border border-green-500 shadow-lg shadow-green-900/20"
@@ -148,15 +155,16 @@ function openSelected() {
     </header>
 
     <!-- Grid -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div v-if="libraryStore.albums.length === 0" class="text-center py-20">
-        <p class="text-gray-400 text-lg">Aucun album trouvé.</p>
-        <button @click="goBack" class="mt-4 text-blue-400 hover:underline">Scanner un autre dossier</button>
+    <main class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div v-if="libraryStore.albums.length === 0" class="flex justify-center py-20">
+        <div class="w-full max-w-md">
+          <ImportCard @click="addFolder" />
+        </div>
       </div>
       
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div v-else class="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
         <AlbumCard 
-          v-for="album in libraryStore.albums" 
+          v-for="album in libraryStore.albums"  
           :key="album.id" 
           :album="album"
           :selected="selectedAlbumIds.has(album.id)"

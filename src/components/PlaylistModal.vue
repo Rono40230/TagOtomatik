@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { Album } from '../types'
 import { useToastStore } from '../stores/toast'
+import { useSettingsStore } from '../stores/settings'
 
 const props = defineProps<{
   album: Album
@@ -15,11 +16,11 @@ const emit = defineEmits<{
 }>()
 
 const toast = useToastStore()
+const settingsStore = useSettingsStore()
 
 // Configuration
 const filename = ref('')
 const format = ref('m3u')
-const pathType = ref('Absolute') // 'Absolute' | 'Relative'
 const useExtendedInfo = ref(true)
 const pathSeparator = ref('Auto') // 'Auto' | 'Slash' | 'Backslash'
 
@@ -28,14 +29,40 @@ const creating = ref(false)
 // Reset state when modal opens
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {
-    // Default filename: Artist - Album
-    // Sanitize filename logic could be here, but let's keep it simple
+    // Default filename based on pattern
+    const pattern = settingsStore.playlist.defaultNamePattern || '{artist} - {album}.m3u'
+    
     const safeArtist = props.album.artist.replace(/[<>:"/\\|?*]/g, '')
     const safeTitle = props.album.title.replace(/[<>:"/\\|?*]/g, '')
-    filename.value = `${safeArtist} - ${safeTitle}`
+    const safeYear = (props.album.year || '').toString().replace(/[<>:"/\\|?*]/g, '')
+
+    let name = pattern
+      .replace(/{artist}/g, safeArtist)
+      .replace(/{album}/g, safeTitle)
+      .replace(/{year}/g, safeYear)
+    
+    // Remove extension from name if present, as it might be added later or confusing
+    // Actually, the pattern includes extension usually. 
+    // But the UI below has format selection? No, format is just m3u.
+    // Let's check if the pattern has an extension.
+    // If the pattern ends with .m3u or .m3u8, we strip it because the user might want to change it?
+    // Wait, the previous code was `filename.value = ...` and `format.value = 'm3u'`.
+    // The createPlaylist function uses `filename.value` and `format.value`.
+    // If filename has extension, it might be double extension if backend adds it.
+    // Let's look at createPlaylist again.
+    // It sends filename and format separately.
+    // Usually backend appends format if missing.
+    // Let's strip extension from the generated name to be safe and let the format handle it, 
+    // OR just let the user edit the full filename including extension.
+    // The previous code set filename to "Artist - Album" (no extension).
+    // So I should probably strip the extension from the pattern result if it matches the selected format.
+    
+    name = name.replace(/\.m3u8?$/i, '')
+    
+    filename.value = name
     
     format.value = 'm3u'
-    pathType.value = 'Absolute'
+    // Sync from store
     useExtendedInfo.value = true
     pathSeparator.value = 'Auto'
     creating.value = false
@@ -53,7 +80,7 @@ async function createPlaylist() {
         tracks: props.album.tracks,
         filename: filename.value,
         format: format.value,
-        path_type: pathType.value,
+        path_type: settingsStore.playlist.useRelativePaths ? 'Relative' : 'Absolute',
         use_extended_info: useExtendedInfo.value,
         path_separator: pathSeparator.value
       }
@@ -118,9 +145,9 @@ function close() {
           
           <div>
             <label class="block text-xs font-medium text-gray-400 mb-1">Chemin des fichiers</label>
-            <select v-model="pathType" :disabled="creating" class="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-              <option value="Absolute">Absolu (/home/user/...)</option>
-              <option value="Relative">Relatif (./track.mp3)</option>
+            <select v-model="settingsStore.playlist.useRelativePaths" :disabled="creating" class="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+              <option :value="false">Absolu (/home/user/...)</option>
+              <option :value="true">Relatif (./track.mp3)</option>
             </select>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
 import type { Album } from '../types'
 import { useToastStore } from '../stores/toast'
+import { useSettingsStore } from '../stores/settings'
 import ConversionTrackRow from './ConversionTrackRow.vue'
 import ConversionSummary from './ConversionSummary.vue'
 
@@ -17,9 +18,9 @@ const emit = defineEmits<{
 }>()
 
 const toast = useToastStore()
+const settingsStore = useSettingsStore()
 
 // Configuration
-const quality = ref('320k')
 const deleteOriginals = ref(true)
 
 // State
@@ -73,7 +74,7 @@ async function startConversion() {
       // 1. Convert
       await invoke('convert_file', { 
         inputPath: track.path, 
-        bitrate: quality.value 
+        bitrate: settingsStore.conversion.bitrate 
       })
 
       // 2. Delete original if requested
@@ -141,11 +142,11 @@ function close() {
       <div class="p-4 bg-gray-800/50 border-b border-gray-700 grid grid-cols-2 gap-4">
         <div>
           <label class="block text-xs font-medium text-gray-400 mb-1">Qualité (Bitrate)</label>
-          <select v-model="quality" :disabled="converting" class="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none h-10">
-            <option value="320k">320 kbps (Excellent - Recommandé)</option>
-            <option value="256k">256 kbps (Très bon)</option>
-            <option value="192k">192 kbps (Standard)</option>
-            <option value="vbr">VBR (Variable - Optimisé)</option>
+          <select v-model="settingsStore.conversion.bitrate" :disabled="converting" class="w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none h-10">
+            <option value="320k">320 kbps (CBR) - Haute Qualité</option>
+            <option value="V0">V0 (VBR) - Meilleur compromis</option>
+            <option value="192k">192 kbps (CBR)</option>
+            <option value="128k">128 kbps (CBR)</option>
           </select>
         </div>
         

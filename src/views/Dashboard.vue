@@ -5,11 +5,14 @@ import { useLibraryStore } from '../stores/library';
 import { useToastStore } from '../stores/toast';
 import { useRouter } from 'vue-router';
 import DashboardTitle from '../components/DashboardTitle.vue';
+import SettingsModal from '../components/SettingsModal.vue';
+import ImportCard from '../components/ImportCard.vue';
 
 const libraryStore = useLibraryStore();
 const toastStore = useToastStore();
 const router = useRouter();
 const isScanning = ref(false);
+const isSettingsOpen = ref(false);
 
 async function openFolder() {
   try {
@@ -48,89 +51,83 @@ function goToLibrary() {
     <!-- Title Section (Glitch Equalizer) -->
     <DashboardTitle />
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl w-full z-10">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl w-full z-10">
       
-      <!-- Card 1: Import (Vinyl/Waveform Theme) -->
+      <!-- Card 0: Settings (Analog Control Panel) -->
       <div 
-        @click="openFolder"
-        class="group relative h-96 rounded-[2rem] bg-gray-900/40 border border-white/5 p-8 cursor-pointer backdrop-blur-xl transition-all duration-500 hover:bg-gray-900/60 hover:border-cyan-500/30 hover:shadow-[0_0_40px_-10px_rgba(6,182,212,0.3)] overflow-hidden"
+        @click="isSettingsOpen = true"
+        class="group relative h-96 rounded-[2rem] bg-gray-900/40 border border-white/5 p-8 cursor-pointer backdrop-blur-xl transition-all duration-500 hover:bg-gray-900/60 hover:border-amber-500/30 hover:shadow-[0_0_40px_-10px_rgba(245,158,11,0.3)] overflow-hidden"
       >
         <!-- Hover Gradient Overlay -->
-        <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
         
         <div class="relative h-full flex flex-col justify-between z-10">
           <div class="space-y-2">
-            <h2 class="text-3xl font-bold text-white group-hover:text-cyan-400 transition-colors">Importer</h2>
-            <p class="text-gray-400 group-hover:text-gray-300 transition-colors">Scanner un nouveau dossier d'albums</p>
+            <h2 class="text-3xl font-bold text-white group-hover:text-amber-400 transition-colors">Paramètres</h2>
+            <p class="text-gray-400 group-hover:text-gray-300 transition-colors">Configuration & Préférences</p>
           </div>
 
-          <!-- Animated Vinyl Icon -->
+          <!-- Animated Control Panel Icon -->
           <div class="self-center relative w-48 h-48 flex items-center justify-center">
-            <!-- Sleeve (Decorated - Abstract Fluid) -->
-            <div class="absolute w-40 h-40 rounded-sm shadow-2xl z-20 flex flex-col items-center justify-center overflow-hidden bg-black border border-blue-300 group-hover:-translate-x-1 transition-transform duration-500">
-               <!-- Fluid Background -->
-               <div class="absolute inset-0 bg-slate-900"></div>
-               
-               <!-- Fluid Shapes SVG -->
-               <div class="absolute inset-0 flex items-center justify-center overflow-hidden">
-                 <svg viewBox="0 0 100 100" class="w-full h-full opacity-90">
-                   <defs>
-                     <linearGradient id="fluidGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                       <stop offset="0%" stop-color="#06b6d4" /> <!-- Cyan -->
-                       <stop offset="100%" stop-color="#3b82f6" /> <!-- Blue -->
-                     </linearGradient>
-                     <linearGradient id="fluidGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
-                       <stop offset="0%" stop-color="#ec4899" /> <!-- Pink -->
-                       <stop offset="100%" stop-color="#8b5cf6" /> <!-- Purple -->
-                     </linearGradient>
-                     <filter id="blurFilter">
-                       <feGaussianBlur in="SourceGraphic" stdDeviation="3" />
-                     </filter>
-                   </defs>
-                   
-                   <!-- Blob 1 -->
-                   <path d="M20 30 Q40 10 60 30 T90 50 T60 80 T20 60 T20 30" fill="url(#fluidGrad1)" opacity="0.8" filter="url(#blurFilter)" />
-                   
-                   <!-- Blob 2 -->
-                   <path d="M70 20 Q90 40 70 70 T30 80 T10 50 T40 10 T70 20" fill="url(#fluidGrad2)" opacity="0.7" filter="url(#blurFilter)" style="mix-blend-mode: screen;" />
-                   
-                   <!-- Fine Lines -->
-                   <path d="M10 50 Q30 20 50 50 T90 50" fill="none" stroke="white" stroke-width="0.5" opacity="0.3" />
-                   <path d="M10 60 Q40 90 70 60 T90 30" fill="none" stroke="white" stroke-width="0.5" opacity="0.2" />
-                 </svg>
-               </div>
-               
-               <!-- Typography -->
-               <div class="relative z-10 flex flex-col items-center justify-center">
-                 <span class="text-[1.5rem] font-light text-white tracking-[0.2em] mix-blend-overlay">ARTIST</span>
-                 <span class="text-[0.7rem] text-cyan-200 tracking-[0.4em] font-medium opacity-80">ALBUM</span>
-               </div>
-            </div>
+             <!-- Frame -->
+             <div class="absolute w-40 h-40 bg-gray-800/50 rounded-sm border border-amber-300 shadow-2xl backdrop-blur-sm flex items-center justify-center transform group-hover:scale-105 transition-transform duration-500 overflow-hidden">
+               <!-- Gears SVG -->
+               <svg viewBox="0 0 100 100" class="w-full h-full opacity-90">
+                 <!-- Gear 1 (Bottom Left) -->
+                 <g transform="translate(30, 70)">
+                   <g class="gear-spin-cw">
+                     <!-- Teeth -->
+                     <circle r="26" fill="none" stroke="#f59e0b" stroke-width="6" stroke-dasharray="5 3" />
+                     <!-- Rim -->
+                     <circle r="22" fill="#1f2937" stroke="#f59e0b" stroke-width="1" />
+                     <!-- Spokes -->
+                     <path d="M-20 0 H20 M0 -20 V20 M-14 -14 L14 14 M-14 14 L14 -14" stroke="#f59e0b" stroke-width="1" />
+                     <!-- Hub -->
+                     <circle r="5" fill="#f59e0b" />
+                   </g>
+                 </g>
 
-            <!-- Vinyl Disc (Slides out) -->
-            <div class="absolute w-36 h-36 rounded-full bg-black border-4 border-gray-900 shadow-2xl flex items-center justify-center z-10 transition-transform duration-700 ease-out group-hover:translate-x-20 group-hover:rotate-180">
-              <!-- Grooves -->
-              <div class="absolute inset-1 rounded-full border border-gray-800/40"></div>
-              <div class="absolute inset-3 rounded-full border border-gray-800/40"></div>
-              <div class="absolute inset-5 rounded-full border border-gray-800/40"></div>
-              <div class="absolute inset-7 rounded-full border border-gray-800/40"></div>
-              <!-- Label -->
-              <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center">
-                <div class="w-2 h-2 bg-black rounded-full"></div>
-              </div>
-              <!-- Shine -->
-              <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-white/5 to-transparent pointer-events-none"></div>
-            </div>
+                 <!-- Gear 2 (Center Right) -->
+                 <g transform="translate(70, 50)">
+                   <g class="gear-spin-ccw">
+                     <!-- Teeth -->
+                     <circle r="18" fill="none" stroke="#d97706" stroke-width="5" stroke-dasharray="4 3" />
+                     <!-- Rim -->
+                     <circle r="15" fill="#1f2937" stroke="#d97706" stroke-width="1" />
+                     <!-- Spokes -->
+                     <path d="M-13 0 H13 M0 -13 V13" stroke="#d97706" stroke-width="1" />
+                     <!-- Hub -->
+                     <circle r="4" fill="#d97706" />
+                   </g>
+                 </g>
+
+                 <!-- Gear 3 (Top Left) -->
+                 <g transform="translate(30, 30)">
+                   <g class="gear-spin-cw-fast">
+                     <!-- Teeth -->
+                     <circle r="12" fill="none" stroke="#fbbf24" stroke-width="4" stroke-dasharray="3 2" />
+                     <!-- Rim -->
+                     <circle r="9" fill="#1f2937" stroke="#fbbf24" stroke-width="1" />
+                     <!-- Hub -->
+                     <circle r="3" fill="#fbbf24" />
+                   </g>
+                 </g>
+               </svg>
+             </div>
           </div>
 
-          <div class="flex items-center text-sm font-medium text-cyan-400 opacity-60 group-hover:opacity-100 transition-opacity">
-            <span class="mr-2">Démarrer le scan</span>
+          <div class="flex items-center text-sm font-medium text-amber-400 opacity-60 group-hover:opacity-100 transition-opacity">
+            <span class="mr-2">Configurer</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
         </div>
       </div>
+
+      <!-- Card 1: Import (Vinyl/Waveform Theme) -->
+      <ImportCard @click="openFolder" />
 
       <!-- Card 2: Library (Equalizer/Stack Theme) -->
       <div 
@@ -147,13 +144,16 @@ function goToLibrary() {
           </div>
 
           <!-- Animated Equalizer Icon -->
-          <div class="self-center relative w-48 h-32 flex items-end justify-center gap-2 pb-4">
-            <!-- EQ Bars -->
-            <div class="w-4 bg-emerald-500/40 rounded-t-md h-8 animate-eq-1 transition-all"></div>
-            <div class="w-4 bg-emerald-500/60 rounded-t-md h-16 animate-eq-2 transition-all"></div>
-            <div class="w-4 bg-emerald-500/80 rounded-t-md h-12 animate-eq-3 transition-all"></div>
-            <div class="w-4 bg-emerald-500/60 rounded-t-md h-20 animate-eq-4 transition-all"></div>
-            <div class="w-4 bg-emerald-500/40 rounded-t-md h-10 animate-eq-5 transition-all"></div>
+          <div class="self-center relative w-48 h-48 flex items-center justify-center">
+            <!-- Frame -->
+            <div class="w-40 h-40 rounded-sm border border-emerald-300 bg-black/40 flex items-end justify-center gap-2 pb-8 shadow-2xl backdrop-blur-sm transition-transform duration-500 group-hover:scale-105">
+              <!-- EQ Bars -->
+              <div class="w-4 bg-emerald-500/40 rounded-t-md h-8 animate-eq-1 transition-all"></div>
+              <div class="w-4 bg-emerald-500/60 rounded-t-md h-16 animate-eq-2 transition-all"></div>
+              <div class="w-4 bg-emerald-500/80 rounded-t-md h-12 animate-eq-3 transition-all"></div>
+              <div class="w-4 bg-emerald-500/60 rounded-t-md h-20 animate-eq-4 transition-all"></div>
+              <div class="w-4 bg-emerald-500/40 rounded-t-md h-10 animate-eq-5 transition-all"></div>
+            </div>
           </div>
 
           <div class="flex items-center text-sm font-medium text-emerald-400 opacity-60 group-hover:opacity-100 transition-opacity">
@@ -172,6 +172,9 @@ function goToLibrary() {
       <div class="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mb-4"></div>
       <p class="text-cyan-400 font-medium animate-pulse">Analyse en cours...</p>
     </div>
+
+    <!-- Settings Modal -->
+    <SettingsModal :is-open="isSettingsOpen" @close="isSettingsOpen = false" />
   </div>
 </template>
 
@@ -183,6 +186,26 @@ function goToLibrary() {
 }
 .animate-spin-slow {
   animation: spin-slow 8s linear infinite;
+}
+
+/* Gear Animations (Paused by default, running on hover) */
+.gear-spin-cw {
+  animation: spin-slow 12s linear infinite;
+  animation-play-state: paused;
+}
+.gear-spin-ccw {
+  animation: spin-slow 8s linear infinite reverse;
+  animation-play-state: paused;
+}
+.gear-spin-cw-fast {
+  animation: spin-slow 6s linear infinite;
+  animation-play-state: paused;
+}
+
+.group:hover .gear-spin-cw,
+.group:hover .gear-spin-ccw,
+.group:hover .gear-spin-cw-fast {
+  animation-play-state: running;
 }
 
 /* Equalizer Animations */

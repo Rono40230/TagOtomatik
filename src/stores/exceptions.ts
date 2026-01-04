@@ -30,7 +30,7 @@ export const useExceptionsStore = defineStore('exceptions', () => {
     }
   }
 
-  async function ajouterException(original: string, corrected: string, category: string) {
+  async function ajouterException(original: string, corrected: string, category: string = 'global') {
     loading.value = true
     error.value = null
     try {

@@ -15,22 +15,12 @@ const emit = defineEmits<{
   (e: 'confirm', data: { original: string; corrected: string; category: string }): void;
 }>();
 
-const category = ref('global');
-
-// Reset category when proposal changes
-watch(() => props.proposal, (newVal) => {
-  if (newVal) {
-    // Default to global, but user can switch to specific category
-    category.value = 'global';
-  }
-});
-
 function confirm() {
   if (props.proposal) {
     emit('confirm', {
       original: props.proposal.original,
       corrected: props.proposal.corrected,
-      category: category.value
+      category: 'global'
     });
   }
 }
@@ -56,17 +46,6 @@ function cancel() {
         </div>
       </div>
       
-      <div class="mb-6">
-        <label class="block text-xs text-gray-400 uppercase font-bold mb-2">Portée de la règle</label>
-        <select 
-          v-model="category" 
-          class="w-full bg-gray-900 text-white p-2.5 rounded-lg border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
-        >
-          <option value="global">🌍 Partout (Global)</option>
-          <option :value="proposal.category">📂 Seulement dans {{ proposal.category }}</option>
-        </select>
-      </div>
-
       <div class="flex justify-end gap-3">
         <button 
           @click="cancel" 

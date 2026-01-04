@@ -1,5 +1,5 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: dim. 04 janv. 2026 17:12:23 CET
+Date: dim. 04 janv. 2026 20:12:09 CET
 
 ## 📂 Arborescence (Backend)
 ```
@@ -63,10 +63,16 @@ src
     CoverSearchModal.vue
     DashboardTitle.vue
     ExceptionDialog.vue
+    ImportCard.vue
     MultiAlbumEditor.vue
     MultiAlbumSidebar.vue
     PlayerBar.vue
     PlaylistModal.vue
+    settings
+    SettingsModal.vue
+      SettingsAudioTab.vue
+      SettingsExceptionsTab.vue
+      SettingsPlaylistTab.vue
     ToastContainer.vue
     TrackList.vue
     TrackRow.vue
@@ -81,6 +87,7 @@ src
     library.ts
     player.ts
     playlist.ts
+    settings.ts
     toast.ts
   style.css
   types

@@ -64,14 +64,14 @@ async function handleSaveAll() {
 
 <template>
     <header class="bg-gray-800 shadow-sm sticky top-0 z-20 border-b border-gray-700">
-      <div class="w-full px-6 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-4">
+      <div class="w-full px-6 h-16 grid grid-cols-3 items-center">
+        <div class="flex items-center justify-start gap-4">
           <button @click="goBack" class="p-2 hover:bg-gray-700 rounded-full transition-colors text-gray-300">
             ⬅️
           </button>
         </div>
         
-        <div class="flex gap-2">
+        <div class="flex items-center justify-center gap-2">
           <template v-if="hasAnyPending">
             <div class="flex items-center gap-2 bg-yellow-900/30 px-3 py-1 rounded-lg border border-yellow-700/50 mr-2">
               <span class="text-yellow-400 text-xs font-medium">Prévisualisation ({{ albums.filter(a => libraryStore.hasPendingCorrection(a.id)).length }})</span>
@@ -105,6 +105,10 @@ async function handleSaveAll() {
               {{ libraryStore.isLoading ? '...' : '💾 Tout Sauvegarder' }}
             </button>
           </template>
+        </div>
+
+        <div class="flex items-center justify-end">
+          <!-- Empty right column for balance -->
         </div>
       </div>
     </header>

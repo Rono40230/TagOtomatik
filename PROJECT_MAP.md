@@ -1,5 +1,5 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: lun. 05 janv. 2026 08:47:04 CET
+Date: lun. 05 janv. 2026 09:02:34 CET
 
 ## 📂 Arborescence (Backend)
 ```

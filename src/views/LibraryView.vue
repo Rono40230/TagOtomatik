@@ -96,8 +96,8 @@ function openSelected() {
   <div class="min-h-screen bg-gray-900 text-white">
     <!-- Header -->
     <header class="bg-gray-800 shadow-sm sticky top-0 z-10 border-b border-gray-700">
-      <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-4">
+      <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 h-16 grid grid-cols-3 items-center">
+        <div class="flex items-center justify-start gap-4">
           <button 
             @click="goBack" 
             class="group p-2 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-cyan-500/50 hover:bg-gray-800 hover:shadow-[0_0_15px_-3px_rgba(6,182,212,0.4)] transition-all duration-300"
@@ -113,7 +113,7 @@ function openSelected() {
           </span>
         </div>
         
-        <div class="flex gap-2 pr-36">
+        <div class="flex items-center justify-center gap-2">
           <button 
             @click="addFolder"
             class="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2 border border-green-500 shadow-lg shadow-green-900/20"
@@ -134,7 +134,9 @@ function openSelected() {
             </svg>
             Gérer les exceptions
           </router-link>
+        </div>
 
+        <div class="flex items-center justify-end gap-2">
           <template v-if="selectedAlbumIds.size > 0">
             <button 
               @click="openSelected"

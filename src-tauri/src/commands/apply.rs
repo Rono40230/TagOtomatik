@@ -5,6 +5,11 @@ use std::fs;
 use std::path::Path;
 
 pub async fn apply_auto_correct_logic(mut album: Album) -> Result<Album, AppError> {
+    // Sanitize album path (remove trailing slash)
+    if album.path.ends_with('/') || album.path.ends_with('\\') {
+        album.path.pop();
+    }
+
     let renamer = RenamerService::new();
     let cleaner = CleanerService::new();
 
@@ -64,13 +69,17 @@ pub async fn apply_auto_correct_logic(mut album: Album) -> Result<Album, AppErro
 
                         // Update all tracks paths (assuming they are inside the folder)
                         for track in &mut album.tracks {
-                            if track.path.starts_with(&old_path_str) {
-                                track.path = track.path.replace(&old_path_str, &new_path_str);
+                            let track_path_obj = Path::new(&track.path);
+                            let old_path_obj = Path::new(&old_path_str);
+                            if let Ok(relative) = track_path_obj.strip_prefix(old_path_obj) {
+                                let new_track_path = Path::new(&new_path_str).join(relative);
+                                track.path = new_track_path.to_string_lossy().to_string();
                             }
                         }
                     }
                     Err(e) => {
                         eprintln!("Failed to rename folder: {}", e);
+                        return Err(AppError::Io(format!("Failed to rename folder: {}", e)));
                     }
                 }
             }
@@ -83,10 +92,40 @@ pub async fn apply_auto_correct_logic(mut album: Album) -> Result<Album, AppErro
 
     // 3b. Write Metadata (Tags) to reflect changes
     let audio_service = AudioService::new();
-    for track in &album.tracks {
-        if let Err(e) = audio_service.ecrire_metadonnees(track) {
-            eprintln!("Error writing tags for {}: {}", track.path, e);
+    for track in &mut album.tracks {
+        let path_obj = Path::new(&track.path);
+        // Ensure file exists before writing
+        if !path_obj.exists() {
+            let mut debug_info = String::new();
+            if let Some(parent) = path_obj.parent() {
+                debug_info.push_str(&format!(" (Parent: {}, Files: ", parent.display()));
+                if let Ok(entries) = std::fs::read_dir(parent) {
+                    let files: Vec<String> = entries
+                        .filter_map(|e| e.ok().map(|e| e.file_name().to_string_lossy().to_string()))
+                        .collect();
+                    debug_info.push_str(&files.join(", "));
+                } else {
+                    debug_info.push_str("Cannot read parent");
+                }
+                debug_info.push(')');
+            }
+            
+            return Err(AppError::Io(format!(
+                "Fichier introuvable pour écriture tags: {}{}",
+                track.path, debug_info
+            )));
         }
+
+        if let Err(e) = audio_service.ecrire_metadonnees(track) {
+            return Err(AppError::Audio(format!(
+                "Erreur écriture tags {}: {}",
+                track.path, e
+            )));
+        }
+
+        // Reset modification state since we just saved it
+        track.is_modified = false;
+        track.original_metadata = Some(Box::new(track.clone()));
     }
 
     // 4. Handle Cover Image (Recursive Search)

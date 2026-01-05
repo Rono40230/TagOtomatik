@@ -48,8 +48,6 @@ watch(() => props.track, (newVal) => {
     }
 }, { deep: true });
 
-import { GENRES } from '../constants';
-
 // Helper pour détecter les changements
 function hasChanged(field: keyof Track): boolean {
     if (!props.track.original_metadata) return false;
@@ -93,8 +91,8 @@ function getOriginalValue(field: keyof Track): string {
       <input 
         type="number" 
         v-model.number="track.track_number"
-        @focus="onFocus(track.track_number)"
-        @blur="onBlur('track_number', track.track_number)"
+        @focus="onFocus(track.track_number ?? 0)"
+        @blur="onBlur('track_number', track.track_number ?? 0)"
         class="w-12 bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none text-center"
         :class="{'text-yellow-400': hasChanged('track_number')}"
       />
@@ -185,8 +183,8 @@ function getOriginalValue(field: keyof Track): string {
     <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-300">
       <input 
         v-model="track.genre"
-        @focus="onFocus(track.genre)"
-        @blur="onBlur('genre', track.genre)"
+        @focus="onFocus(track.genre ?? '')"
+        @blur="onBlur('genre', track.genre ?? '')"
         class="w-full bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none"
         :class="{'text-green-400 font-medium': hasChanged('genre')}"
       />
@@ -201,8 +199,8 @@ function getOriginalValue(field: keyof Track): string {
         <input 
           type="number"
           v-model.number="track.year"
-          @focus="onFocus(track.year)"
-          @blur="onBlur('year', track.year)"
+          @focus="onFocus(track.year ?? 0)"
+          @blur="onBlur('year', track.year ?? 0)"
           class="w-16 bg-transparent border-b border-transparent hover:border-gray-500 focus:border-blue-500 focus:outline-none text-right"
           :class="{'text-green-400 font-medium': hasChanged('year')}"
         />

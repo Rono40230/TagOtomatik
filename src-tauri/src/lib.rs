@@ -11,6 +11,7 @@ use commands::{
     cover::{apply_cover, download_cover, read_cover, read_track_cover, search_cover},
     delete_exception, get_exceptions,
     history::get_scan_history,
+    metadata::search_musicbrainz,
     player::{pause_track, play_track, resume_track, set_volume, stop_track},
     playlist::{
         add_to_playlist, create_playlist, get_playlist_tracks, list_playlists, write_playlist,
@@ -71,7 +72,8 @@ pub fn run() {
             write_playlist,
             convert_file,
             delete_file,
-            get_scan_history
+            get_scan_history,
+            search_musicbrainz
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

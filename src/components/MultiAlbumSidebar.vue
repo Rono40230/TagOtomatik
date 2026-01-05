@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import type { Album } from '../types';
 import { computed } from 'vue';
-import { useLibraryStore } from '../stores/library';
+// import { useLibraryStore } from '../stores/library';
 
 const props = defineProps<{
   albums: Album[]
 }>();
 
-const libraryStore = useLibraryStore();
+// const libraryStore = useLibraryStore();
 
 // Helper to get common value
-function getCommonValue<K extends keyof Album>(field: K): string | number | undefined {
-  if (props.albums.length === 0) return '';
+function getCommonValue<K extends keyof Album>(field: K): Album[K] | undefined {
+  if (props.albums.length === 0) return undefined;
   const first = props.albums[0][field];
   const allSame = props.albums.every(a => a[field] === first);
   return allSame ? first : undefined;
@@ -52,6 +52,7 @@ const commonYear = computed({
   }
 });
 
+/*
 const commonGenre = computed({
   get: () => {
     const val = getCommonValue('genre');
@@ -67,7 +68,9 @@ const commonGenre = computed({
     });
   }
 });
+*/
 
+/*
 const GENRES = [
     "Acid Jazz", "B.O. de Films", "Blues", "Chansons Française", "Disco",
     "Electronique", "Flamenco", "Folk", "Funk", "Jazz", "Musique Afriquaine",
@@ -75,11 +78,12 @@ const GENRES = [
     "Musique Franco-Hispanique", "New-Wave", "Pop", "Rap", "Reggae", "Rock",
     "Soul", "Top 50", "Trip-Hop", "Zouk"
 ];
+*/
 
 const placeholderTitle = computed(() => getCommonValue('title') === undefined ? '(Valeurs multiples)' : '');
 const placeholderArtist = computed(() => getCommonValue('artist') === undefined ? '(Valeurs multiples)' : '');
 const placeholderYear = computed(() => getCommonValue('year') === undefined ? '(Valeurs multiples)' : '');
-const placeholderGenre = computed(() => getCommonValue('genre') === undefined ? '(Valeurs multiples)' : '');
+// const placeholderGenre = computed(() => getCommonValue('genre') === undefined ? '(Valeurs multiples)' : '');
 
 </script>
 
@@ -125,16 +129,13 @@ const placeholderGenre = computed(() => getCommonValue('genre') === undefined ? 
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-400 uppercase mb-1">Genre</label>
-            <div class="relative">
+            <!-- Genre editing disabled because Album doesn't have genre field directly -->
+            <div class="relative opacity-50 pointer-events-none">
                 <input 
-                    v-model="commonGenre"
-                    list="genres-list-multi"
-                    :placeholder="placeholderGenre"
+                    disabled
+                    placeholder="Non disponible"
                     class="w-full h-10 p-2.5 border border-gray-600 rounded-lg text-base font-semibold bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder-gray-500"
                 />
-                <datalist id="genres-list-multi">
-                    <option v-for="g in GENRES" :key="g" :value="g"></option>
-                </datalist>
             </div>
           </div>
         </div>

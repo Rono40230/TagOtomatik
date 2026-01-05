@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useLibraryStore } from '../stores/library';
-import type { Album } from '../types';
+import type { Album, MusicBrainzRelease } from '../types';
+import MetadataSearchModal from './MetadataSearchModal.vue';
 
 const props = defineProps<{
   albums: Album[]
@@ -10,6 +11,7 @@ const props = defineProps<{
 
 const router = useRouter();
 const libraryStore = useLibraryStore();
+const isMetadataModalOpen = ref(false);
 
 const pageTitle = computed(() => {
   if (props.albums.length === 1) {
@@ -60,15 +62,35 @@ async function handleSaveAll() {
     await libraryStore.saveAlbum(album.id);
   }
 }
+
+function handleMetadataSelect(release: MusicBrainzRelease) {
+  if (props.albums.length !== 1) return;
+  
+  libraryStore.applyMetadata(props.albums[0].id, {
+    title: release.title,
+    artist: release['artist-credit']?.[0]?.name || 'Unknown Artist',
+    year: release.date
+  });
+}
 </script>
 
 <template>
     <header class="bg-gray-800 shadow-sm sticky top-0 z-20 border-b border-gray-700">
       <div class="w-full px-6 h-16 grid grid-cols-3 items-center">
         <div class="flex items-center justify-start gap-4">
-          <button @click="goBack" class="p-2 hover:bg-gray-700 rounded-full transition-colors text-gray-300">
-            ⬅️
+          <button 
+            @click="goBack" 
+            class="group p-2 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-cyan-500/50 hover:bg-gray-800 hover:shadow-[0_0_15px_-3px_rgba(6,182,212,0.4)] transition-all duration-300"
+            title="Retour"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-cyan-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
           </button>
+          <div class="flex flex-col overflow-hidden">
+            <h1 class="text-lg font-bold text-white leading-tight truncate">{{ pageTitle }}</h1>
+            <span class="text-xs text-gray-400 truncate">{{ pageSubtitle }}</span>
+          </div>
         </div>
         
         <div class="flex items-center justify-center gap-2">
@@ -91,6 +113,13 @@ async function handleSaveAll() {
           </template>
           <template v-else>
             <button 
+              v-if="albums.length === 1"
+              @click="isMetadataModalOpen = true"
+              class="px-4 py-2 bg-purple-900/50 text-purple-300 border border-purple-700 rounded-lg hover:bg-purple-900 font-medium text-sm transition-colors flex items-center gap-2"
+            >
+              🔍 Recherche de métadonnées
+            </button>
+            <button 
               @click="handleAutoCorrectAll"
               :disabled="libraryStore.isLoading"
               class="px-4 py-2 bg-blue-900/50 text-blue-300 border border-blue-700 rounded-lg hover:bg-blue-900 font-medium text-sm transition-colors flex items-center gap-2"
@@ -108,8 +137,17 @@ async function handleSaveAll() {
         </div>
 
         <div class="flex items-center justify-end">
-          <!-- Empty right column for balance -->
+          <!-- Right side empty now -->
         </div>
       </div>
     </header>
+
+    <MetadataSearchModal
+      v-if="albums.length === 1"
+      :is-open="isMetadataModalOpen"
+      :artist="albums[0].artist"
+      :album="albums[0].title"
+      @close="isMetadataModalOpen = false"
+      @select="handleMetadataSelect"
+    />
 </template>

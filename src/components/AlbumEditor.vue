@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import type { Album, Track } from '../types';
 import AlbumSidebar from './AlbumSidebar.vue';
 import TrackList from './TrackList.vue';
 import { useLibraryStore } from '../stores/library';
 
-const props = defineProps<{
+defineProps<{
   album: Album
 }>();
 

@@ -4,6 +4,7 @@ pub mod correct;
 pub mod cover;
 pub mod exception;
 pub mod history;
+pub mod metadata;
 pub mod player;
 pub mod playlist;
 pub mod scan;

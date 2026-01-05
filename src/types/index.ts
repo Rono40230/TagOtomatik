@@ -34,3 +34,11 @@ export interface Album {
     status: AlbumStatus;
     issues?: string[];
 }
+
+export interface MusicBrainzRelease {
+    id: string;
+    title: string;
+    'artist-credit'?: { name: string }[];
+    date?: string;
+    country?: string;
+}

@@ -177,7 +177,7 @@ function close() {
           :track="track"
           :index="index"
           :status="trackStatuses.get(track.path) || 'pending'"
-          :quality="quality"
+          :quality="settingsStore.conversion.bitrate"
         />
       </div>
 

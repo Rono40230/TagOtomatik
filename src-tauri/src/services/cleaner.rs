@@ -39,7 +39,9 @@ impl CleanerService {
             if target_path != current_path {
                 // Create parent dir if missing (should be album_path)
                 if let Some(parent) = target_path.parent() {
-                    let _ = fs::create_dir_all(parent);
+                    if !parent.exists() {
+                        let _ = fs::create_dir_all(parent);
+                    }
                 }
 
                 match fs::rename(current_path, &target_path) {

@@ -19,9 +19,16 @@ fn sanitize_filename(name: &str) -> String {
 pub async fn save_album_changes(mut album: Album) -> Result<Album, AppError> {
     let audio_service = AudioService::new();
 
-    // 1. Save tags
+    // 1. Save tags FIRST (before renaming, so path is still valid)
     for track in &mut album.tracks {
         if track.is_modified {
+            // Verify file exists before writing
+            if !std::path::Path::new(&track.path).exists() {
+                return Err(AppError::Io(format!(
+                    "Fichier introuvable avant écriture tags: {}",
+                    track.path
+                )));
+            }
             audio_service.ecrire_metadonnees(track)?;
             track.is_modified = false;
             track.original_metadata = Some(Box::new(track.clone()));
@@ -31,13 +38,18 @@ pub async fn save_album_changes(mut album: Album) -> Result<Album, AppError> {
     // 2. Rename files
     for track in &mut album.tracks {
         let old_path = PathBuf::from(&track.path);
+        if !old_path.exists() {
+            // Skip if file doesn't exist (maybe already renamed or deleted externally)
+            continue;
+        }
+
         let parent = old_path
             .parent()
             .ok_or_else(|| AppError::Io("Invalid path".into()))?;
 
         // Use the filename provided by the frontend (user edits)
         // We assume the user knows what they are doing regarding extensions
-        let new_filename = track.filename.clone();
+        let new_filename = sanitize_filename(&track.filename);
 
         let new_path = parent.join(&new_filename);
 

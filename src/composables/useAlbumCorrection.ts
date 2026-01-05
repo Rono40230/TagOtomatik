@@ -4,7 +4,26 @@ import type { Album } from '../types';
 import { useToastStore } from '../stores/toast';
 
 function handleError(e: unknown, toast: ReturnType<typeof useToastStore>, context: string): string {
-    const errMsg = e instanceof Error ? e.message : String(e);
+    let errMsg = '';
+    if (e instanceof Error) {
+        errMsg = e.message;
+    } else if (typeof e === 'string') {
+        errMsg = e;
+    } else if (typeof e === 'object' && e !== null) {
+        // Try to find a message property or stringify
+        if ('message' in e) {
+            errMsg = String((e as any).message);
+        } else {
+            try {
+                errMsg = JSON.stringify(e);
+            } catch {
+                errMsg = String(e);
+            }
+        }
+    } else {
+        errMsg = String(e);
+    }
+    
     toast.error(`${context}: ${errMsg}`);
     return errMsg;
 }
@@ -93,11 +112,45 @@ export function useAlbumCorrection(
         );
     }
 
+    function applyMetadata(albumId: string, metadata: { title: string, artist: string, year?: string }) {
+        const index = albums.value.findIndex(a => a.id === albumId);
+        if (index === -1) return;
+
+        const album = albums.value[index];
+        
+        // Save original if not already saved (for undo/cancel)
+        if (!originalAlbums.value.has(albumId)) {
+            originalAlbums.value.set(albumId, JSON.parse(JSON.stringify(album)));
+        }
+
+        // Update fields
+        album.title = metadata.title;
+        album.artist = metadata.artist;
+        if (metadata.year) {
+             const year = parseInt(metadata.year.split('-')[0]);
+             if (!isNaN(year)) album.year = year;
+        }
+
+        // Update tracks
+        album.tracks.forEach(track => {
+            track.album = metadata.title;
+            track.album_artist = metadata.artist;
+            if (metadata.year) {
+                 const year = parseInt(metadata.year.split('-')[0]);
+                 if (!isNaN(year)) track.year = year;
+            }
+            track.is_modified = true;
+        });
+        
+        toast.success('Métadonnées appliquées (en attente de validation)');
+    }
+
     return {
         autoCorrectAlbum,
         applyAutoCorrect,
         cancelAutoCorrect,
         hasPendingCorrection,
-        saveAlbum
+        saveAlbum,
+        applyMetadata
     };
 }

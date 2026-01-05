@@ -1,5 +1,5 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: lun. 05 janv. 2026 09:02:34 CET
+Date: lun. 05 janv. 2026 15:03:43 CET
 
 ## 📂 Arborescence (Backend)
 ```
@@ -11,6 +11,7 @@ Date: lun. 05 janv. 2026 09:02:34 CET
       cover.rs
       exception.rs
       history.rs
+      metadata.rs
       mod.rs
       player.rs
       playlist.rs
@@ -37,6 +38,7 @@ Date: lun. 05 janv. 2026 09:02:34 CET
       exception.rs
       io.rs
       mod.rs
+      musicbrainz.rs
       player.rs
       playlist.rs
       processor.rs
@@ -65,6 +67,7 @@ src
     DashboardTitle.vue
     ExceptionDialog.vue
     ImportCard.vue
+    MetadataSearchModal.vue
     MultiAlbumEditor.vue
     MultiAlbumSidebar.vue
     PlayerBar.vue
@@ -129,6 +132,9 @@ services/processor.rs:pub struct ReplacementRule {
 services/processor.rs:pub struct MetadataProcessorService;
 services/scanner.rs:pub struct ScannerService;
 services/validator.rs:pub struct ValidatorService;
+services/musicbrainz.rs:pub struct MusicBrainzRelease {
+services/musicbrainz.rs:pub struct ArtistCredit {
+services/musicbrainz.rs:pub struct MusicBrainzService {
 commands/cover.rs:pub struct CoverServiceState(pub Mutex<CoverService>);
 commands/playlist.rs:pub struct PlaylistServiceState(pub Mutex<PlaylistService>);
 commands/history.rs:pub fn get_scan_history(db: State<Database>) -> Result<Vec<String>, String> {

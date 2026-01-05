@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { XMarkIcon, MusicalNoteIcon, ListBulletIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
+import { MusicalNoteIcon, ListBulletIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline';
 import SettingsAudioTab from './settings/SettingsAudioTab.vue';
 import SettingsPlaylistTab from './settings/SettingsPlaylistTab.vue';
 import SettingsExceptionsTab from './settings/SettingsExceptionsTab.vue';
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean;
 }>();
 
-const emit = defineEmits<{
+defineEmits<{
   (e: 'close'): void;
 }>();
 

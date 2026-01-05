@@ -22,7 +22,7 @@ export const useLibraryStore = defineStore('library', () => {
     const { scannedPaths, blacklistedPaths, saveState } = useLibraryPersistence();
     const { 
         autoCorrectAlbum, applyAutoCorrect, cancelAutoCorrect, 
-        hasPendingCorrection, saveAlbum 
+        hasPendingCorrection, saveAlbum, applyMetadata
     } = useAlbumCorrection(albums, isLoading, error);
 
     async function scanDirectory(path: string, isAutoLoad = false) {
@@ -144,6 +144,6 @@ export const useLibraryStore = defineStore('library', () => {
         albums, currentPath, isLoading, error,
         scanDirectory, getAlbumById, autoCorrectAlbum, applyAutoCorrect,
         cancelAutoCorrect, hasPendingCorrection, saveAlbum, removeAlbum,
-        updateAlbumTracksField, refreshAlbum, loadLibrary
+        updateAlbumTracksField, refreshAlbum, loadLibrary, applyMetadata
     };
 });

@@ -97,10 +97,6 @@ async function handleCoverSelect(url: string) {
   }
 }
 
-function goBack() {
-  router.push('/library');
-}
-
 function playTrack(track: Track) {
   playerStore.play(track);
 }

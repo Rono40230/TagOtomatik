@@ -32,7 +32,7 @@ function closeApp() {
 <template>
   <div class="h-screen w-screen flex flex-col bg-app-bg text-slate-100 overflow-hidden">
     <!-- Custom Window Controls -->
-    <div @mousedown="startDrag" class="fixed top-0 left-0 right-0 h-8 z-40 cursor-move"></div>
+    <div data-tauri-drag-region @dblclick="toggleMaximize" class="fixed top-0 left-0 right-0 h-8 z-40 cursor-move"></div>
     
     <div class="fixed top-2 right-2 z-50 flex gap-2 bg-black/20 backdrop-blur-md rounded-lg p-1 border border-white/5">
       <button @click="minimize" class="p-1.5 hover:bg-white/10 rounded-md transition-colors text-gray-400 hover:text-white">

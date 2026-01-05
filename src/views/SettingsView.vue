@@ -97,7 +97,7 @@ function goBack() {
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ ex.corrected }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
               <button 
-                @click="store.supprimerException(ex.id)"
+                @click="store.supprimerException(ex.id!)"
                 class="text-red-400 hover:text-red-300"
               >
                 Supprimer

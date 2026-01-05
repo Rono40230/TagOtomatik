@@ -12,10 +12,6 @@ onMounted(() => {
   libraryStore.loadLibrary()
 })
 
-function startDrag() {
-  appWindow.startDragging()
-}
-
 function minimize() {
   appWindow.minimize()
 }

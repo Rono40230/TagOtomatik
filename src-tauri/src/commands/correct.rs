@@ -89,6 +89,12 @@ pub async fn preview_auto_correct(
         if track.album != old_album {
             track.is_modified = true;
         }
+
+        // Enforce Album Artist == Artist (User Rule)
+        if track.album_artist != track.artist {
+            track.album_artist = track.artist.clone();
+            track.is_modified = true;
+        }
     }
 
     // Update Album-level metadata from the first track (to reflect changes in UI header)
@@ -102,7 +108,7 @@ pub async fn preview_auto_correct(
         };
 
         album.title = format!("{}{}", year_str, first_track.album);
-        // album.artist = first_track.album_artist.clone(); // If we were correcting artists
+        album.artist = first_track.artist.clone(); 
     }
 
     Ok(album)

@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import type { Album } from '../types';
 import { computed } from 'vue';
-// import { useLibraryStore } from '../stores/library';
+import { useLibraryStore } from '../stores/library';
+import { GENRES } from '../constants';
 
 const props = defineProps<{
   albums: Album[]
 }>();
 
-// const libraryStore = useLibraryStore();
+const libraryStore = useLibraryStore();
 
 // Helper to get common value
 function getCommonValue<K extends keyof Album>(field: K): Album[K] | undefined {
@@ -52,38 +53,56 @@ const commonYear = computed({
   }
 });
 
-/*
+function getCommonGenreValue(): string | undefined {
+    if (props.albums.length === 0) return undefined;
+    
+    let firstVal: string | undefined;
+    let initialized = false;
+
+    for (const album of props.albums) {
+        for (const track of album.tracks) {
+            if (!initialized) {
+                firstVal = track.genre;
+                initialized = true;
+            } else {
+                if (track.genre !== firstVal) return undefined;
+            }
+        }
+    }
+    
+    if (!initialized) return undefined; // No tracks
+    return firstVal;
+}
+
 const commonGenre = computed({
   get: () => {
-    const val = getCommonValue('genre');
-    return val === undefined ? '' : String(val);
+    const val = getCommonGenreValue();
+    return val === undefined ? '' : val;
   },
   set: (val: string) => {
-    // Update genre for all albums AND their tracks
     props.albums.forEach(a => {
-        // Update album genre (local state)
-        // Note: libraryStore.updateAlbumTracksField usually updates the store/backend
-        // We should probably call it for each album
         libraryStore.updateAlbumTracksField(a.id, 'genre', val);
     });
   }
 });
-*/
 
-/*
-const GENRES = [
-    "Acid Jazz", "B.O. de Films", "Blues", "Chansons Française", "Disco",
-    "Electronique", "Flamenco", "Folk", "Funk", "Jazz", "Musique Afriquaine",
-    "Musique Andine", "Musique Brésilienne", "Musique Classique", "Musique Cubaine",
-    "Musique Franco-Hispanique", "New-Wave", "Pop", "Rap", "Reggae", "Rock",
-    "Soul", "Top 50", "Trip-Hop", "Zouk"
-];
-*/
+function cycleGenre(direction: 1 | -1) {
+    const current = commonGenre.value;
+    let index = GENRES.indexOf(current);
+    
+    if (index === -1) {
+        index = direction === 1 ? 0 : GENRES.length - 1;
+    } else {
+        index = (index + direction + GENRES.length) % GENRES.length;
+    }
+    
+    commonGenre.value = GENRES[index];
+}
 
 const placeholderTitle = computed(() => getCommonValue('title') === undefined ? '(Valeurs multiples)' : '');
 const placeholderArtist = computed(() => getCommonValue('artist') === undefined ? '(Valeurs multiples)' : '');
 const placeholderYear = computed(() => getCommonValue('year') === undefined ? '(Valeurs multiples)' : '');
-// const placeholderGenre = computed(() => getCommonValue('genre') === undefined ? '(Valeurs multiples)' : '');
+const placeholderGenre = computed(() => getCommonGenreValue() === undefined ? '(Valeurs multiples)' : '');
 
 </script>
 
@@ -129,13 +148,24 @@ const placeholderYear = computed(() => getCommonValue('year') === undefined ? '(
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-400 uppercase mb-1">Genre</label>
-            <!-- Genre editing disabled because Album doesn't have genre field directly -->
-            <div class="relative opacity-50 pointer-events-none">
+            <div class="relative">
                 <input 
-                    disabled
-                    placeholder="Non disponible"
-                    class="w-full h-10 p-2.5 border border-gray-600 rounded-lg text-base font-semibold bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder-gray-500"
+                    v-model="commonGenre"
+                    :placeholder="placeholderGenre"
+                    class="w-full h-10 p-2.5 pr-8 border border-gray-600 rounded-lg text-base font-semibold bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors placeholder-gray-500"
                 />
+                <div class="absolute right-1 top-1 bottom-1 flex flex-col justify-center">
+                  <button 
+                    @click="cycleGenre(-1)" 
+                    class="text-xs text-gray-400 hover:text-white focus:outline-none leading-none p-0.5 hover:bg-gray-600 rounded"
+                    tabindex="-1"
+                  >▲</button>
+                  <button 
+                    @click="cycleGenre(1)" 
+                    class="text-xs text-gray-400 hover:text-white focus:outline-none leading-none p-0.5 hover:bg-gray-600 rounded"
+                    tabindex="-1"
+                  >▼</button>
+                </div>
             </div>
           </div>
         </div>

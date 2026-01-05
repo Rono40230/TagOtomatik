@@ -12,8 +12,12 @@ onMounted(() => {
 });
 
 async function addException() {
-  if (newOriginal.value && newCorrected.value) {
-    await exceptionsStore.ajouterException(newOriginal.value, newCorrected.value, 'global');
+  if (newOriginal.value && newOriginal.value.trim()) {
+    await exceptionsStore.ajouterException(
+      newOriginal.value.trim(), 
+      newCorrected.value ? newCorrected.value.trim() : '', 
+      'global'
+    );
     newOriginal.value = '';
     newCorrected.value = '';
   }
@@ -40,7 +44,16 @@ async function addException() {
           <input v-model="newCorrected" type="text" class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-sm" placeholder="ex: AC/DC">
         </div>
         <div class="col-span-2">
-          <button @click="addException" class="w-full bg-amber-600 hover:bg-amber-500 text-white rounded py-2 flex items-center justify-center">
+          <button 
+            @click="addException" 
+            :disabled="!newOriginal || !newOriginal.trim()"
+            :class="[
+              'w-full rounded py-2 flex items-center justify-center transition-colors',
+              (!newOriginal || !newOriginal.trim()) 
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed' 
+                : 'bg-amber-600 hover:bg-amber-500 text-white'
+            ]"
+          >
             +
           </button>
         </div>
@@ -60,9 +73,17 @@ async function addException() {
         <tbody class="divide-y divide-gray-800">
           <tr v-for="ex in exceptionsStore.exceptions" :key="ex.id" class="hover:bg-gray-800/50">
             <td class="px-6 py-3 text-red-400 font-mono">{{ ex.original }}</td>
-            <td class="px-6 py-3 text-green-400 font-mono">{{ ex.corrected }}</td>
+            <td class="px-6 py-3 text-green-400 font-mono">
+              <span v-if="ex.corrected === ''" class="text-gray-500 italic">(suppression)</span>
+              <span v-else>{{ ex.corrected }}</span>
+            </td>
             <td class="px-6 py-3 text-right">
-              <button class="text-gray-600 hover:text-red-500 transition-colors">Supprimer</button>
+              <button 
+                @click="ex.id && exceptionsStore.supprimerException(ex.id)"
+                class="text-gray-600 hover:text-red-500 transition-colors"
+              >
+                Supprimer
+              </button>
             </td>
           </tr>
           <tr v-if="exceptionsStore.exceptions.length === 0">

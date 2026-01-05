@@ -16,11 +16,11 @@ onMounted(() => {
 })
 
 async function handleSubmit() {
-  if (!form.value.original || !form.value.corrected) return
+  if (!form.value.original || !form.value.original.trim()) return
   
   await store.ajouterException(
-    form.value.original,
-    form.value.corrected
+    form.value.original.trim(),
+    form.value.corrected ? form.value.corrected.trim() : ''
   )
   
   // Reset form

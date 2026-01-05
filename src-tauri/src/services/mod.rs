@@ -10,6 +10,7 @@ pub mod playlist;
 pub mod processor;
 pub mod renamer;
 pub mod scanner;
+pub mod validator;
 
 #[cfg(test)]
 mod processor_tests;
@@ -21,3 +22,4 @@ pub use io::IOService;
 pub use processor::MetadataProcessorService;
 pub use renamer::RenamerService;
 pub use scanner::ScannerService;
+pub use validator::ValidatorService;

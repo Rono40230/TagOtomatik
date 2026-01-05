@@ -70,6 +70,12 @@ const statusTooltip = computed(() => {
   if (props.album.status === 'Clean') return 'Album complet et conforme';
   if (props.album.status === 'Processing') return 'Analyse en cours...';
   
+  // Use backend issues if available (Source of Truth)
+  if (props.album.issues && props.album.issues.length > 0) {
+    return props.album.issues.map(i => `• ${i}`).join('\n');
+  }
+  
+  // Fallback for legacy/transition state
   const issues: string[] = [];
   
   if (!props.album.cover_path) issues.push('• Cover manquante');

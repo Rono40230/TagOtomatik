@@ -2,8 +2,15 @@
 import ToastContainer from './components/ToastContainer.vue'
 import PlayerBar from './components/PlayerBar.vue'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { onMounted } from 'vue'
+import { useLibraryStore } from './stores/library'
 
 const appWindow = getCurrentWindow()
+const libraryStore = useLibraryStore()
+
+onMounted(() => {
+  libraryStore.loadLibrary()
+})
 
 function startDrag() {
   appWindow.startDragging()

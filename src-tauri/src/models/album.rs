@@ -20,6 +20,8 @@ pub struct Album {
     pub has_playlist: bool,
     pub tracks: Vec<Track>,
     pub status: AlbumStatus,
+    #[serde(default)]
+    pub issues: Vec<String>,
 }
 
 impl Album {
@@ -34,6 +36,7 @@ impl Album {
             has_playlist: false,
             tracks: Vec::new(),
             status: AlbumStatus::Processing,
+            issues: Vec::new(),
         }
     }
 }

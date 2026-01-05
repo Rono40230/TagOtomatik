@@ -1,5 +1,5 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: dim. 04 janv. 2026 20:12:09 CET
+Date: lun. 05 janv. 2026 08:47:04 CET
 
 ## 📂 Arborescence (Backend)
 ```
@@ -43,6 +43,7 @@ Date: dim. 04 janv. 2026 20:12:09 CET
       processor_tests.rs
       renamer.rs
       scanner.rs
+      validator.rs
 ```
 
 ## 📂 Arborescence (Frontend)
@@ -77,6 +78,8 @@ src
     TrackList.vue
     TrackRow.vue
   composables
+    useAlbumCorrection.ts
+    useLibraryPersistence.ts
     useSmartDiff.ts
   constants.ts
   main.ts
@@ -125,6 +128,7 @@ services/exception.rs:pub struct ExceptionService;
 services/processor.rs:pub struct ReplacementRule {
 services/processor.rs:pub struct MetadataProcessorService;
 services/scanner.rs:pub struct ScannerService;
+services/validator.rs:pub struct ValidatorService;
 commands/cover.rs:pub struct CoverServiceState(pub Mutex<CoverService>);
 commands/playlist.rs:pub struct PlaylistServiceState(pub Mutex<PlaylistService>);
 commands/history.rs:pub fn get_scan_history(db: State<Database>) -> Result<Vec<String>, String> {

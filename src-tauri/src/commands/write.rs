@@ -1,5 +1,5 @@
 use crate::models::{Album, AppError};
-use crate::services::{AudioService, IOService, ScannerService};
+use crate::services::{AudioService, IOService, ValidatorService};
 use regex::Regex;
 use std::path::PathBuf;
 
@@ -123,7 +123,7 @@ pub async fn save_album_changes(mut album: Album) -> Result<Album, AppError> {
     }
 
     // 4. Re-evaluate album status (Clean/Dirty)
-    ScannerService::evaluate_album_status(&mut album);
+    ValidatorService::evaluate_album_status(&mut album);
 
     Ok(album)
 }

@@ -1,6 +1,6 @@
 use crate::db::Database;
 use crate::models::{Album, AppError};
-use crate::services::ScannerService;
+use crate::services::{ScannerService, ValidatorService};
 use tauri::State;
 
 #[tauri::command]
@@ -25,6 +25,5 @@ pub async fn scan_directory(path: String, db: State<'_, Database>) -> Result<Vec
 
 #[tauri::command]
 pub async fn scan_junk(path: String) -> Result<Vec<String>, AppError> {
-    let scanner = ScannerService::new();
-    scanner.detecter_fichiers_inutiles(&path)
+    ValidatorService::detecter_fichiers_inutiles(&path)
 }

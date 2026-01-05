@@ -32,4 +32,5 @@ export interface Album {
     has_playlist: boolean;
     tracks: Track[];
     status: AlbumStatus;
+    issues?: string[];
 }

@@ -14,19 +14,16 @@ pub async fn apply_auto_correct_logic(mut album: Album) -> Result<Album, AppErro
     let cleaner = CleanerService::new();
 
     // 2. Rename Folder Logic
-    // Calculate Year Range (Min-Max) or Single Year
-    let years: Vec<u32> = album.tracks.iter().filter_map(|t| t.year).collect();
-    let folder_year = if years.is_empty() {
-        None
-    } else {
-        let min = years.iter().min().unwrap();
-        let max = years.iter().max().unwrap();
-        if min == max {
-            Some(*min)
-        } else {
-            Some(*min)
-        }
-    };
+    // Calculate Year Range
+    let years: Vec<u32> = album
+        .tracks
+        .iter()
+        .filter_map(|t| t.year)
+        .filter(|&y| y > 0)
+        .collect();
+
+    let year_min = years.iter().min().copied();
+    let year_max = years.iter().max().copied();
 
     // Use the first track to determine Album Artist (heuristic)
     if let Some(first_track) = album.tracks.first() {
@@ -35,7 +32,7 @@ pub async fn apply_auto_correct_logic(mut album: Album) -> Result<Album, AppErro
         // Use album.title as the source of truth for the folder name,
         // but strip the year prefix if present (to avoid double year like "(2023) (2023) Title")
         let title_clean = if album.title.starts_with('(') {
-            let re_year_prefix = Regex::new(r"^\(\d{4}\)\s*").unwrap();
+            let re_year_prefix = Regex::new(r"^\(\d{4}(?:-\d{2})?\)\s*").unwrap();
             re_year_prefix.replace(&album.title, "").to_string()
         } else {
             album.title.clone()
@@ -49,7 +46,7 @@ pub async fn apply_auto_correct_logic(mut album: Album) -> Result<Album, AppErro
         };
 
         // If range, we might want to format manually, but let's use processor for consistency
-        let new_folder_name = renamer.format_folder_name(artist, title, folder_year);
+        let new_folder_name = renamer.format_folder_name(artist, title, year_min, year_max);
 
         let current_path_buf = Path::new(&album.path).to_path_buf();
         let current_path = current_path_buf.as_path();
@@ -109,7 +106,7 @@ pub async fn apply_auto_correct_logic(mut album: Album) -> Result<Album, AppErro
                 }
                 debug_info.push(')');
             }
-            
+
             return Err(AppError::Io(format!(
                 "Fichier introuvable pour écriture tags: {}{}",
                 track.path, debug_info

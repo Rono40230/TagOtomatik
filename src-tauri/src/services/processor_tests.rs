@@ -67,22 +67,31 @@ fn test_format_folder_name() {
     let renamer = RenamerService::new();
 
     assert_eq!(
-        renamer.format_folder_name("Artist", "Album", Some(2020)),
+        renamer.format_folder_name("Artist", "Album", Some(2020), Some(2020)),
         "(2020) Album"
     );
-    assert_eq!(renamer.format_folder_name("Artist", "Album", None), "Album");
+    assert_eq!(
+        renamer.format_folder_name("Artist", "Album", None, None),
+        "Album"
+    );
+
+    // Date Range
+    assert_eq!(
+        renamer.format_folder_name("Artist", "Best Of", Some(1971), Some(2025)),
+        "(1971-25) Best of"
+    );
 
     // Artist Exception
     // Expect Sentence Case: "Live at river plate"
     assert_eq!(
-        renamer.format_folder_name("AC/DC", "Live at River Plate", Some(2012)),
+        renamer.format_folder_name("AC/DC", "Live at River Plate", Some(2012), Some(2012)),
         "(2012) Live at river plate"
     );
 
     // If album contains artist name, preserve artist case
     // AC/DC -> AC-DC in folder name
     assert_eq!(
-        renamer.format_folder_name("AC/DC", "The AC/DC Collection", Some(2000)),
+        renamer.format_folder_name("AC/DC", "The AC/DC Collection", Some(2000), Some(2000)),
         "(2000) The AC-DC collection"
     );
 }

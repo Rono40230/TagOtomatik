@@ -71,7 +71,8 @@ impl ScannerService {
                                 album.tracks.push(track);
                             }
                             Err(e) => {
-                                let err_msg = format!("Erreur lecture fichier {}: {:?}", path.display(), e);
+                                let err_msg =
+                                    format!("Erreur lecture fichier {}: {:?}", path.display(), e);
                                 eprintln!("{}", err_msg);
                                 errors.push(err_msg);
                             }
@@ -86,6 +87,19 @@ impl ScannerService {
 
         // Mettre à jour le statut des albums
         for album in &mut albums {
+            // Calculer les années min et max
+            let years: Vec<u32> = album
+                .tracks
+                .iter()
+                .filter_map(|t| t.year)
+                .filter(|&y| y > 0)
+                .collect();
+
+            if !years.is_empty() {
+                album.year_min = years.iter().min().copied();
+                album.year_max = years.iter().max().copied();
+            }
+
             ValidatorService::evaluate_album_status(album);
 
             // Trier les pistes par numéro

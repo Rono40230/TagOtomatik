@@ -1,5 +1,5 @@
 # 🗺️ PROJECT MAP (Généré automatiquement)
-Date: lun. 05 janv. 2026 15:03:43 CET
+Date: mar. 06 janv. 2026 20:23:24 CET
 
 ## 📂 Arborescence (Backend)
 ```
@@ -28,6 +28,7 @@ Date: lun. 05 janv. 2026 15:03:43 CET
       exception.rs
       mod.rs
       playlist.rs
+      scan.rs
       track.rs
     services
       audio.rs
@@ -117,7 +118,7 @@ models/playlist.rs:pub struct Playlist {
 models/playlist.rs:pub struct PlaylistTrack {
 models/playlist.rs:pub struct PlaylistOptions {
 models/exception.rs:pub struct CaseException {
-services/audio.rs:pub struct AudioService;
+models/scan.rs:pub struct ScanResult {
 services/io.rs:pub struct IOService;
 services/cover.rs:pub struct CoverResult {
 services/cover.rs:pub struct CoverService {
@@ -135,9 +136,10 @@ services/validator.rs:pub struct ValidatorService;
 services/musicbrainz.rs:pub struct MusicBrainzRelease {
 services/musicbrainz.rs:pub struct ArtistCredit {
 services/musicbrainz.rs:pub struct MusicBrainzService {
-commands/cover.rs:pub struct CoverServiceState(pub Mutex<CoverService>);
+services/audio.rs:pub struct AudioService;
 commands/playlist.rs:pub struct PlaylistServiceState(pub Mutex<PlaylistService>);
 commands/history.rs:pub fn get_scan_history(db: State<Database>) -> Result<Vec<String>, String> {
+commands/cover.rs:pub struct CoverServiceState(pub Mutex<CoverService>);
 db/database.rs:pub struct Database {
 lib.rs:pub fn run() {
 ```

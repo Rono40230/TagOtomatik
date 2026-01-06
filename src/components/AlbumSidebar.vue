@@ -72,6 +72,25 @@ const commonAlbumTag = computed(() => {
   return props.album.title; // Fallback
 });
 
+const displayYear = computed({
+  get: () => {
+    const { yearMin, yearMax, year } = props.album;
+    if (yearMin && yearMax && yearMin !== yearMax) {
+      // Afficher 1971-2015 tel quel, comme une info
+      return `${yearMin}-${yearMax}`; 
+    }
+    return year?.toString() || '';
+  },
+  set: (val: string) => {
+    // Si l'utilisateur entre une valeur manuelle, on essaie de la parser en nombre
+    // pour l'appliquer comme année unique à tout l'album
+    const num = parseInt(val, 10);
+    if (!isNaN(num)) {
+      emit('update:year', num);
+    }
+  }
+});
+
 function cycleGenre(direction: 1 | -1) {
     const current = props.album.tracks[0]?.genre || "";
     let index = GENRES.indexOf(current);
@@ -132,9 +151,8 @@ function cycleGenre(direction: 1 | -1) {
             <div>
               <label class="block text-xs font-medium text-gray-400 uppercase mb-1">Année</label>
               <input 
-                :value="album.year"
-                @input="$emit('update:year', Number(($event.target as HTMLInputElement).value))"
-                type="number" 
+                v-model="displayYear"
+                type="text" 
                 class="w-full h-10 p-2.5 border border-gray-600 rounded-lg text-sm bg-gray-700 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors" 
               />
             </div>

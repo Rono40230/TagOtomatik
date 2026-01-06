@@ -1,6 +1,7 @@
 use lofty::ItemKey;
 use lofty::{
-    Accessor, AudioFile, MimeType, ParseOptions, ParsingMode, Picture, PictureType, Probe, TagExt, TaggedFileExt,
+    Accessor, AudioFile, MimeType, ParseOptions, ParsingMode, Picture, PictureType, Probe, TagExt,
+    TaggedFileExt,
 };
 use std::path::Path;
 
@@ -34,7 +35,7 @@ impl AudioService {
             .options(
                 ParseOptions::new()
                     .read_properties(true)
-                    .parsing_mode(ParsingMode::Relaxed)
+                    .parsing_mode(ParsingMode::Relaxed),
             )
             .read()
             .map_err(|e| AppError::Audio(format!("Erreur de lecture: {}", e)))?;
@@ -124,7 +125,7 @@ impl AudioService {
         if let Some(track_num) = track.track_number {
             tag.set_track(track_num);
         }
-        
+
         // Ensure ISRC is removed from the primary tag as well (redundant but safe)
         tag.remove_key(&ItemKey::Isrc);
 
@@ -132,18 +133,18 @@ impl AudioService {
             let err_str = e.to_string();
             if err_str.contains("ISRC") || err_str.contains("invalid frame") {
                 println!("Corrupt tag detected (ISRC/Invalid Frame). Attempting nuclear fix (Clear & Rewrite).");
-                
+
                 // Preserve pictures
                 let pictures = tag.pictures().to_vec();
-                
+
                 // Clear all items (removes corrupt frames)
                 tag.clear();
-                
+
                 // Restore pictures
                 for pic in pictures {
                     tag.push_picture(pic);
                 }
-                
+
                 // Re-apply metadata
                 tag.set_title(track.title.clone());
                 tag.set_artist(track.artist.clone());
@@ -158,10 +159,14 @@ impl AudioService {
                 if let Some(track_num) = track.track_number {
                     tag.set_track(track_num);
                 }
-                
+
                 // Retry save
-                tag.save_to_path(path)
-                    .map_err(|e| AppError::Audio(format!("Erreur d'écriture (après tentative de correction): {}", e)))?;
+                tag.save_to_path(path).map_err(|e| {
+                    AppError::Audio(format!(
+                        "Erreur d'écriture (après tentative de correction): {}",
+                        e
+                    ))
+                })?;
             } else {
                 return Err(AppError::Audio(format!("Erreur d'écriture: {}", e)));
             }

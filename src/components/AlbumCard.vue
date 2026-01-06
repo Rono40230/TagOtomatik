@@ -132,6 +132,15 @@ function openConversionModal() {
 function openPlaylistModal() {
   showPlaylistModal.value = true;
 }
+
+const displayYear = computed(() => {
+  const { yearMin, yearMax, year } = props.album;
+  if (yearMin && yearMax && yearMin !== yearMax) {
+    const maxShort = yearMax % 100;
+    return `${yearMin}-${maxShort.toString().padStart(2, '0')}`;
+  }
+  return year?.toString() || '????';
+});
 </script>
 
 <template>
@@ -192,7 +201,7 @@ function openPlaylistModal() {
       <p class="text-gray-300 truncate" :title="album.artist">{{ album.artist || 'Artiste inconnu' }}</p>
       
       <div class="mt-3 flex justify-between items-center text-xs text-gray-400">
-        <span>{{ album.year || '????' }}</span>
+        <span>{{ displayYear }}</span>
         <button 
           @click.stop="openConversionModal"
           :class="['px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1 group/format border', formatColor]"

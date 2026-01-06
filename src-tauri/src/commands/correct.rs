@@ -108,7 +108,7 @@ pub async fn preview_auto_correct(
         };
 
         album.title = format!("{}{}", year_str, first_track.album);
-        album.artist = first_track.artist.clone(); 
+        album.artist = first_track.artist.clone();
     }
 
     Ok(album)

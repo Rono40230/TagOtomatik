@@ -87,7 +87,7 @@ function handleMetadataSelect(release: MusicBrainzRelease) {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </button>
-          <div class="flex flex-col overflow-hidden">
+          <div v-if="albums.length > 1" class="flex flex-col overflow-hidden">
             <h1 class="text-lg font-bold text-white leading-tight truncate">{{ pageTitle }}</h1>
             <span class="text-xs text-gray-400 truncate">{{ pageSubtitle }}</span>
           </div>

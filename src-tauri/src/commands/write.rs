@@ -1,5 +1,5 @@
 use crate::models::{Album, AppError};
-use crate::services::{AudioService, IOService, ValidatorService};
+use crate::services::{AudioService, IOService, RenamerService, ValidatorService};
 use regex::Regex;
 use std::path::PathBuf;
 
@@ -67,21 +67,37 @@ pub async fn save_album_changes(mut album: Album) -> Result<Album, AppError> {
 
         // Check if we have a parent folder to rename within
         if let Some(parent_of_folder) = current_folder.parent() {
-            // Use RenamerService logic for consistency: (Year) Album Title
-            // Note: We use album.title directly as it now contains the correct title from UI
-            let year_str = match album.year {
-                Some(y) if y > 0 => format!("({}) ", y),
-                _ => String::new(),
-            };
+            let renamer = RenamerService::new();
 
+            // Calculate Year Range if not present in album (it should be, but let's be safe)
+            // or trust the frontend/scanner values if they are populated.
+            // If the user modified 'year' to a single value in the UI, we might respect that.
+            // BUT: The UI logic (AlbiumSidebar) sends back 'year' if modified singly.
+            // We should check if year_min/max are consistent with 'year' or if valid.
+
+            // Logic:
+            // 1. If 'year' matches 'year_min' or 'year_max' OR if min/max are None, try to recompute from tracks?
+            // Actually, we should probably recompute from the tracks present in the album being saved,
+            // because the user might have changed dates on individual tracks.
+
+            let years: Vec<u32> = album
+                .tracks
+                .iter()
+                .filter_map(|t| t.year)
+                .filter(|&y| y > 0)
+                .collect();
+
+            let year_min = years.iter().min().copied().or(album.year_min);
+            let year_max = years.iter().max().copied().or(album.year_max);
+
+            // Use album.title as the source of truth for the folder name
+            // But strip existing year prefix if present
             let safe_title = sanitize_filename(&album.title);
+            let re = Regex::new(r"^\(\d{4}(?:-\d{2})?\)\s*").unwrap();
+            let clean_title = re.replace(&safe_title, "").to_string();
 
-            // Clean existing year prefix from title if present to avoid duplication
-            // Pattern: Starts with (YYYY) followed by optional space
-            let re = Regex::new(r"^\(\d{4}\)\s*").unwrap();
-            let clean_title = re.replace(&safe_title, "");
-
-            let new_folder_name = format!("{}{}", year_str, clean_title).trim().to_string();
+            let new_folder_name =
+                renamer.format_folder_name(&album.artist, &clean_title, year_min, year_max);
 
             let current_folder_name = current_folder.file_name().unwrap().to_string_lossy();
 

@@ -16,6 +16,10 @@ pub struct Album {
     pub title: String,
     pub artist: String, // Artiste principal (Album Artist)
     pub year: Option<u32>,
+    #[serde(rename = "yearMin")]
+    pub year_min: Option<u32>,
+    #[serde(rename = "yearMax")]
+    pub year_max: Option<u32>,
     pub cover_path: Option<String>, // Chemin vers cover.jpg locale ou cache
     pub has_playlist: bool,
     pub tracks: Vec<Track>,
@@ -32,6 +36,8 @@ impl Album {
             title,
             artist,
             year: None,
+            year_min: None,
+            year_max: None,
             cover_path: None,
             has_playlist: false,
             tracks: Vec::new(),

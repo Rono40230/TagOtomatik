@@ -28,6 +28,8 @@ export interface Album {
     title: string;
     artist: string;
     year?: number;
+    yearMin?: number;
+    yearMax?: number;
     cover_path?: string;
     has_playlist: boolean;
     tracks: Track[];

@@ -13,9 +13,23 @@ impl RenamerService {
         Self
     }
 
-    pub fn format_folder_name(&self, artist: &str, album: &str, year: Option<u32>) -> String {
-        let year_str = match year {
-            Some(y) if y > 0 => format!("({}) ", y),
+    pub fn format_folder_name(
+        &self,
+        artist: &str,
+        album: &str,
+        year_min: Option<u32>,
+        year_max: Option<u32>,
+    ) -> String {
+        let year_str = match (year_min, year_max) {
+            (Some(min), Some(max)) => {
+                if min == max {
+                    format!("({}) ", min)
+                } else {
+                    let max_short = max % 100;
+                    format!("({}-{:02}) ", min, max_short)
+                }
+            }
+            (Some(y), None) | (None, Some(y)) => format!("({}) ", y),
             _ => String::new(),
         };
 

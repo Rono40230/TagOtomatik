@@ -2,6 +2,7 @@
 import type { Track } from '../types';
 import { reactive, ref, computed, watch } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
+import { usePlayerStore } from '../stores/player';
 import TrackRow from './TrackRow.vue';
 
 const props = defineProps<{
@@ -13,6 +14,8 @@ const emit = defineEmits<{
   (e: 'add-to-playlist', path: string): void
   (e: 'suggest-exception', data: { original: string; corrected: string; category: string }): void
 }>();
+
+const playerStore = usePlayerStore();
 
 // Column Resizing Logic
 const colWidths = reactive<Record<string, number>>({
@@ -183,6 +186,7 @@ function stopResize() {
           <TrackRow 
             v-for="track in sortedTracks" 
             :key="track.path"
+            :class="{ 'bg-blue-500/20': playerStore.currentTrack?.path === track.path }"
             :track="track"
             :col-widths="colWidths"
             :cover-url="trackCovers.get(track.path)"

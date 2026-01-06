@@ -98,7 +98,26 @@ async function handleCoverSelect(url: string) {
 }
 
 function playTrack(track: Track) {
-  playerStore.play(track);
+  // Trouver l'album associé pour récupérer la cover
+  let coverPath: string | null | undefined = null;
+  let tracksToQueue: Track[] = [];
+  
+  if (albums.value.length === 1) {
+    coverPath = albums.value[0].cover_path;
+    tracksToQueue = albums.value[0].tracks;
+  } else {
+    const parentAlbum = albums.value.find(a => a.tracks.some(t => t.path === track.path));
+    if (parentAlbum) {
+      coverPath = parentAlbum.cover_path;
+      tracksToQueue = parentAlbum.tracks;
+    }
+  }
+  
+  if (tracksToQueue.length > 0) {
+    playerStore.play(track, coverPath, tracksToQueue);
+  } else {
+    playerStore.play(track, coverPath);
+  }
 }
 
 function handleExceptionSuggestion(data: { original: string; corrected: string; category: string }) {

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
-import type { Album, Track } from '../types';
+import type { Album, Track, ScanResult } from '../types';
 import { useToastStore } from './toast';
 import { useLibraryPersistence } from '../composables/useLibraryPersistence';
 import { useAlbumCorrection } from '../composables/useAlbumCorrection';
@@ -37,13 +37,20 @@ export const useLibraryStore = defineStore('library', () => {
                 saveState();
             }
 
-            const result = await invoke<Album[]>('scan_directory', { path });
+            const result = await invoke<ScanResult>('scan_directory', { path });
+            // Force refresh of albums from result
+            const foundAlbums = result.albums;
+            
+            if (result.errors.length > 0 && !isAutoLoad) {
+                toast.warning(`${result.errors.length} fichiers ont été ignorés (erreurs de lecture).`);
+                // Si besoin, stocker les erreurs dans le store pour affichage dans une modale
+            }
             
             let restoredCount = 0;
             if (!isAutoLoad) {
-                result.forEach(a => {
+                foundAlbums.forEach(a => {
                     if (blacklistedPaths.value.has(a.path)) {
-                        if (path === a.path || result.length === 1) {
+                        if (path === a.path || foundAlbums.length === 1) {
                             blacklistedPaths.value.delete(a.path);
                             restoredCount++;
                         }
@@ -52,7 +59,7 @@ export const useLibraryStore = defineStore('library', () => {
                 if (restoredCount > 0) saveState();
             }
 
-            const validAlbums = result.filter(a => !blacklistedPaths.value.has(a.path));
+            const validAlbums = foundAlbums.filter(a => !blacklistedPaths.value.has(a.path));
             const existingIds = new Set(albums.value.map(a => a.id));
             const newAlbums = validAlbums.filter(a => !existingIds.has(a.id));
             albums.value.push(...newAlbums);
@@ -62,15 +69,17 @@ export const useLibraryStore = defineStore('library', () => {
                     toast.success(`${newAlbums.length} albums ajoutés.`);
                 } else if (restoredCount > 0) {
                     toast.success('Album restauré de la liste des ignorés.');
-                } else if (result.length > 0) {
-                    const hiddenCount = result.length - validAlbums.length;
+                } else if (foundAlbums.length > 0) {
+                    const hiddenCount = foundAlbums.length - validAlbums.length;
                     if (hiddenCount > 0) {
                         toast.info(`${hiddenCount} album(s) ignoré(s) car précédemment supprimé(s).`);
                     } else {
                         toast.info('Albums déjà présents.');
                     }
                 } else {
-                    toast.info('Aucun album trouvé.');
+                    if (result.errors.length === 0) {
+                         toast.info('Aucun album trouvé.');
+                    }
                 }
             }
         } catch (e) {
@@ -126,16 +135,10 @@ export const useLibraryStore = defineStore('library', () => {
         
         isLoading.value = true;
         try {
-            const result = await invoke<Album[]>('scan_directory', { path: albums.value[index].path });
-            if (result.length > 0) {
-                const updated = result.find(a => a.path === albums.value[index].path) || result[0];
+            const result = await invoke<ScanResult>('scan_directory', { path: albums.value[index].path });
+            if (result.albums.length > 0) {
+                const updated = result.albums.find(a => a.path === albums.value[index].path) || result.albums[0];
                 albums.value[index] = updated;
-                // Note: originalAlbums is now managed in useAlbumCorrection, 
-                // but refreshAlbum might need to update it if a correction is pending.
-                // However, refresh usually resets state. 
-                // For now, we assume refresh clears pending corrections implicitly by updating the album,
-                // but useAlbumCorrection's internal state won't know.
-                // This is a minor limitation of the refactor.
             }
         } catch (e) { /* Silent fail */ } finally { isLoading.value = false; }
     }

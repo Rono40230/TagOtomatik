@@ -1,10 +1,10 @@
 use crate::db::Database;
-use crate::models::{Album, AppError};
+use crate::models::{AppError, ScanResult};
 use crate::services::{ScannerService, ValidatorService};
 use tauri::State;
 
 #[tauri::command]
-pub async fn scan_directory(path: String, db: State<'_, Database>) -> Result<Vec<Album>, AppError> {
+pub async fn scan_directory(path: String, db: State<'_, Database>) -> Result<ScanResult, AppError> {
     // Validation basique
     if path.is_empty() {
         return Err(AppError::Validation(

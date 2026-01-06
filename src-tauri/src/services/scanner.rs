@@ -1,4 +1,4 @@
-use crate::models::{Album, AppError};
+use crate::models::{Album, AppError, ScanResult};
 use crate::services::{AudioService, ValidatorService};
 use std::collections::HashMap;
 use std::path::Path;
@@ -17,9 +17,10 @@ impl ScannerService {
         Self
     }
 
-    pub fn scanner_dossier(&self, chemin_racine: &str) -> Result<Vec<Album>, AppError> {
+    pub fn scanner_dossier(&self, chemin_racine: &str) -> Result<ScanResult, AppError> {
         let audio_service = AudioService::new();
         let mut albums_map: HashMap<String, Album> = HashMap::new();
+        let mut errors: Vec<String> = Vec::new();
         let extensions_supportees = ["mp3", "flac", "ogg", "m4a", "wav"];
 
         for entry in WalkDir::new(chemin_racine)
@@ -70,8 +71,9 @@ impl ScannerService {
                                 album.tracks.push(track);
                             }
                             Err(e) => {
-                                eprintln!("Erreur lecture fichier {}: {:?}", path.display(), e);
-                                // On continue même si un fichier échoue
+                                let err_msg = format!("Erreur lecture fichier {}: {:?}", path.display(), e);
+                                eprintln!("{}", err_msg);
+                                errors.push(err_msg);
                             }
                         }
                     }
@@ -94,6 +96,6 @@ impl ScannerService {
             });
         }
 
-        Ok(albums)
+        Ok(ScanResult { albums, errors })
     }
 }

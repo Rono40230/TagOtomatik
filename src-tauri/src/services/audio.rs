@@ -1,6 +1,6 @@
 use lofty::ItemKey;
 use lofty::{
-    Accessor, AudioFile, MimeType, ParseOptions, Picture, PictureType, Probe, TagExt, TaggedFileExt,
+    Accessor, AudioFile, MimeType, ParseOptions, ParsingMode, Picture, PictureType, Probe, TagExt, TaggedFileExt,
 };
 use std::path::Path;
 
@@ -28,9 +28,14 @@ impl AudioService {
             .to_string();
 
         // Utiliser Probe pour détecter et lire le fichier
+        // Utilisation du mode Relaxed pour tenter de lire les fichiers corrompus/malformés
         let tagged_file = Probe::open(path)
             .map_err(|e| AppError::Audio(format!("Erreur d'ouverture: {}", e)))?
-            .options(ParseOptions::new().read_properties(true))
+            .options(
+                ParseOptions::new()
+                    .read_properties(true)
+                    .parsing_mode(ParsingMode::Relaxed)
+            )
             .read()
             .map_err(|e| AppError::Audio(format!("Erreur de lecture: {}", e)))?;
 

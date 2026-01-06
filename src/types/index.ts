@@ -42,3 +42,8 @@ export interface MusicBrainzRelease {
     date?: string;
     country?: string;
 }
+
+export interface ScanResult {
+    albums: Album[];
+    errors: string[];
+}

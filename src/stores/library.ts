@@ -60,6 +60,30 @@ export const useLibraryStore = defineStore('library', () => {
             }
 
             const validAlbums = foundAlbums.filter(a => !blacklistedPaths.value.has(a.path));
+            
+            // Sync Logic: Remove albums that are under this scan path but not in the new result
+            // This handles folders that were renamed, moved, or deleted externally
+            const scanPathNormalized = path.replace(/\\/g, '/');
+            const foundIds = new Set(validAlbums.map(a => a.id));
+
+            albums.value = albums.value.filter(existing => {
+                const existingPath = existing.path.replace(/\\/g, '/');
+                // Check if existing album belongs to the scope of current scan
+                // We use startsWith. We append '/' to ensure we match folders properly (avoid /Music vs /Music2 matching)
+                // Exception: if path is the album itself.
+                
+                // If the scan path IS the album path (direct import), then we replace it.
+                // If scan path is parent, we replace children.
+                
+                const isUnderScope = existingPath === scanPathNormalized || existingPath.startsWith(scanPathNormalized + '/');
+                
+                if (isUnderScope) {
+                     // Only keep if it was found in the new result
+                     return foundIds.has(existing.id);
+                }
+                return true;
+            });
+
             const existingIds = new Set(albums.value.map(a => a.id));
             const newAlbums = validAlbums.filter(a => !existingIds.has(a.id));
             albums.value.push(...newAlbums);
@@ -83,8 +107,26 @@ export const useLibraryStore = defineStore('library', () => {
                 }
             }
         } catch (e) {
-            if (!isAutoLoad) error.value = handleError(e, toast, 'Erreur de scan');
-            else toast.error(`Erreur chargement auto ${path}`);
+            if (!isAutoLoad) {
+                error.value = handleError(e, toast, 'Erreur de scan');
+            } else {
+                // If auto-load fails (e.g. folder moved/deleted externally), silent cleanup
+                // We remove the path from scannedPaths to prevent future errors
+                // and we rely on the implementation above that cleared albums for valid paths.
+                // But since scan failed, we haven't reached the cleanup logic above.
+                // So if the ROOT path is gone, we should remove any album starting with it.
+                
+
+                scannedPaths.value.delete(path);
+                saveState();
+                
+                // Cleanup associated albums from memory
+                const deadPathNormalized = path.replace(/\\/g, '/');
+                albums.value = albums.value.filter(a => {
+                    const p = a.path.replace(/\\/g, '/');
+                    return !(p === deadPathNormalized || p.startsWith(deadPathNormalized + '/'));
+                });
+            }
         } finally {
             isLoading.value = false;
         }
@@ -138,7 +180,8 @@ export const useLibraryStore = defineStore('library', () => {
             const result = await invoke<ScanResult>('scan_directory', { path: albums.value[index].path });
             if (result.albums.length > 0) {
                 const updated = result.albums.find(a => a.path === albums.value[index].path) || result.albums[0];
-                albums.value[index] = updated;
+                // Use splice to ensure reactivity trigger is clean
+                albums.value.splice(index, 1, updated);
             }
         } catch (e) { /* Silent fail */ } finally { isLoading.value = false; }
     }

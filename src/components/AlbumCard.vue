@@ -58,11 +58,13 @@ onUnmounted(() => {
 
 const statusColor = computed(() => {
   switch (props.album.status) {
-    case 'Clean': return 'bg-green-900 text-green-200 border border-green-700';
-    case 'Dirty': return 'bg-yellow-900 text-yellow-200 border border-yellow-700';
-    case 'Incomplete': return 'bg-red-900 text-red-200 border border-red-700';
-    case 'Processing': return 'bg-blue-900 text-blue-200 border border-blue-700';
-    default: return 'bg-gray-700 text-gray-300 border border-gray-600';
+    case 'Clean':
+      return 'bg-green-500 text-white border border-green-400';
+    case 'Dirty': 
+    case 'Incomplete': // Usually implies dirty/problematic too
+      return 'bg-red-500 text-white border border-red-400';
+    default:
+      return 'bg-blue-400 text-white border border-blue-300';
   }
 });
 
@@ -110,15 +112,8 @@ const formatBadge = computed(() => {
 });
 
 const formatColor = computed(() => {
-  const formats = new Set(props.album.tracks.map(t => t.format.toUpperCase()));
-  
-  if (formats.has('FLAC')) {
-    return 'bg-red-900 text-red-100 border-red-700 hover:bg-red-800';
-  }
-  if (formats.has('MP3')) {
-    return 'bg-green-900 text-green-100 border-green-700 hover:bg-green-800';
-  }
-  return 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600';
+  // Uniform look: Blue background, White text.
+  return 'bg-blue-400 text-white border-blue-300 hover:bg-blue-300';
 });
 
 function openDetail() {
@@ -162,33 +157,8 @@ const displayYear = computed(() => {
       @refresh="emit('refresh', album.id)"
     />
 
-    <!-- Selection Checkbox -->
-    <div class="absolute top-2 left-2 z-20" @click.stop>
-      <input 
-        type="checkbox" 
-        :checked="selected"
-        @change="emit('toggle-selection', album.id, ($event.target as HTMLInputElement).checked)"
-        class="w-5 h-5 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-700"
-      />
-    </div>
-
-    <!-- Status Badge (Top Right) -->
-    <div class="absolute top-2 right-2 z-10 group/status">
-      <span 
-        :class="['text-xs font-bold px-2 py-1 rounded-full shadow-md cursor-help inline-block', statusColor]"
-      >
-        {{ album.status }}
-      </span>
-      <!-- Custom Tooltip -->
-      <div 
-        v-if="album.status !== 'Clean'"
-        class="absolute top-full right-0 mt-2 w-56 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl border border-gray-700 opacity-0 group-hover/status:opacity-100 transition-opacity pointer-events-none z-30 whitespace-pre-line leading-relaxed"
-      >
-        <div class="font-bold mb-1 border-b border-gray-700 pb-1 text-yellow-500">Problèmes détectés :</div>
-        {{ statusTooltip }}
-      </div>
-    </div>
-
+    <!-- Status Badge (Moved to bottom) & Tooltip container if needed logic handled below -->
+    
     <div class="aspect-square bg-gray-700 flex items-center justify-center relative">
       <img v-if="coverUrl" :src="coverUrl" alt="Cover" class="w-full h-full object-cover" />
       <div v-else class="flex flex-col items-center justify-center text-gray-400 h-full w-full">
@@ -200,36 +170,73 @@ const displayYear = computed(() => {
       <h3 class="font-bold text-lg truncate text-white" :title="album.title">{{ album.title || 'Sans titre' }}</h3>
       <p class="text-gray-300 truncate" :title="album.artist">{{ album.artist || 'Artiste inconnu' }}</p>
       
-      <div class="mt-3 flex justify-between items-center text-xs text-gray-400">
-        <span>{{ displayYear }}</span>
-        <button 
-          @click.stop="openConversionModal"
-          :class="['px-2 py-0.5 rounded transition-colors cursor-pointer flex items-center gap-1 group/format border', formatColor]"
-          title="Convertir le format"
-        >
-          {{ formatBadge }}
-          <span class="hidden group-hover/format:inline text-[10px]">➜ MP3</span>
-        </button>
-        <div class="flex items-center gap-2">
+      <div class="mt-3 flex flex-col gap-2">
+        <!-- Info & Selection (Checkbox moved here) -->
+        <div class="flex justify-between items-center text-xs text-gray-400">
+          <div class="flex gap-2">
+             <span>{{ displayYear }}</span>
+             <span>• {{ album.tracks.length }} pistes</span>
+          </div>
+          <!-- Selection Checkbox -->
+          <div @click.stop>
+            <input 
+                type="checkbox" 
+                :checked="selected"
+                @change="emit('toggle-selection', album.id, ($event.target as HTMLInputElement).checked)"
+                class="w-4 h-4 rounded border-gray-600 text-blue-600 focus:ring-blue-500 bg-gray-700 cursor-pointer"
+            />
+          </div>
+        </div>
+
+        <!-- Action Badges (Delete moved here) -->
+        <div class="flex flex-wrap gap-2 items-center">
+            
+          <!-- STATUS BADGE -->
+          <div class="relative group/status">
+            <div 
+                :class="['h-5 px-2 flex items-center justify-center text-[10px] font-bold rounded cursor-help border min-w-[40px]', statusColor]"
+            >
+                {{ album.status }}
+            </div>
+            <!-- Custom Tooltip -->
+            <div 
+                v-if="album.status !== 'Clean'"
+                class="absolute bottom-full left-0 mb-2 w-56 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-xl border border-gray-700 opacity-0 group-hover/status:opacity-100 transition-opacity pointer-events-none z-30 whitespace-pre-line leading-relaxed"
+            >
+                <div class="font-bold mb-1 border-b border-gray-700 pb-1 text-yellow-500">Problèmes détectés :</div>
+                {{ statusTooltip }}
+            </div>
+          </div>
+
+          <!-- Format Conversion -->
+          <button 
+            @click.stop="openConversionModal"
+            :class="['h-5 px-2 flex items-center justify-center text-[10px] rounded border gap-1 group/format transition-colors min-w-[40px]', formatColor]"
+            title="Convertir le format"
+          >
+            {{ formatBadge }}
+            <span class="hidden group-hover/format:inline text-[10px] ml-1">➜ MP3</span>
+          </button>
+
+          <!-- Create Playlist -->
           <button 
             @click.stop="openPlaylistModal"
-            class="text-gray-400 hover:text-green-400 transition-colors p-1 hover:bg-gray-700 rounded"
+            class="h-5 px-2 flex items-center justify-center text-[10px] rounded border border-blue-300 bg-blue-400 text-white hover:bg-blue-300 transition-colors font-medium"
+            :class="{'!bg-green-600 !border-green-500': album.has_playlist}"
             title="Générer une playlist"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            {{ album.has_playlist ? 'Playlist OK' : 'Créer playlist' }}
           </button>
-          <span>{{ album.tracks.length }} pistes</span>
+
+          <!-- Refresh -->
           <button 
-            @click.stop="emit('delete', album.id)"
-            class="text-gray-500 hover:text-red-500 transition-colors p-1"
-            title="Supprimer de la bibliothèque"
+             @click.stop="emit('refresh', album.id)"
+             class="h-5 px-2 flex items-center justify-center text-[10px] rounded border border-blue-300 bg-blue-400 text-white hover:bg-blue-300 transition-colors font-medium"
+             title="Scanner à nouveau le dossier"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
+            Actualiser la carte
           </button>
+
         </div>
       </div>
     </div>

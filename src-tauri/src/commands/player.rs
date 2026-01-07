@@ -29,3 +29,15 @@ pub async fn set_volume(state: State<'_, AudioPlayerState>, volume: f32) -> Resu
     state.set_volume(volume);
     Ok(())
 }
+
+#[tauri::command]
+pub async fn seek_track(state: State<'_, AudioPlayerState>, time: f32) -> Result<(), String> {
+    state.seek(time);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn set_eq(state: State<'_, AudioPlayerState>, bass: f32, mid: f32, treble: f32) -> Result<(), String> {
+    state.set_eq(bass, mid, treble);
+    Ok(())
+}

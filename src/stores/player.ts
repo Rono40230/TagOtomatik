@@ -13,6 +13,13 @@ export const usePlayerStore = defineStore('player', () => {
   const currentCoverPath = ref<string | null>(null)
   const queue = ref<Track[]>([])
   const currentIndex = ref(-1)
+  
+  // Equalizer state (-10 to 10)
+  const eqSettings = ref({
+    bass: 0,
+    mid: 0,
+    treble: 0
+  })
 
   const toast = useToastStore()
   
@@ -140,9 +147,24 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  function seek(time: number) {
-      // Pour l'instant on simule juste le changement visuel car le backend ne supporte pas le seek
+  async function seek(time: number) {
+    try {
+      // Backend seek
+      await invoke('seek_track', { time })
+      // Frontend sync
       currentTime.value = time
+    } catch (error) {
+      toast.error(`Erreur seek: ${error}`)
+    }
+  }
+
+  async function setEq(bass: number, mid: number, treble: number) {
+    eqSettings.value = { bass, mid, treble }
+    try {
+      await invoke('set_eq', { bass, mid, treble })
+    } catch (error) {
+      toast.error(`Erreur EQ: ${error}`)
+    }
   }
 
   return {
@@ -154,6 +176,7 @@ export const usePlayerStore = defineStore('player', () => {
     currentCoverPath,
     queue,
     currentIndex,
+    eqSettings,
     play,
     pause,
     resume,
@@ -161,6 +184,7 @@ export const usePlayerStore = defineStore('player', () => {
     next,
     previous,
     setVolume,
-    seek
+    seek,
+    setEq
   }
 })

@@ -186,7 +186,11 @@ impl ValidatorService {
                 let is_cover = file_name == "cover.jpg";
 
                 if !is_audio && !is_cover {
-                    junk_files.push(file_name.to_string());
+                    if file_name.to_lowercase() == "cover.jpg" {
+                        junk_files.push(format!("{} (sera renommé en cover.jpg)", file_name));
+                    } else {
+                        junk_files.push(file_name.to_string());
+                    }
                 }
             }
         }

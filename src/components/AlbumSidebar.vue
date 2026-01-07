@@ -56,6 +56,7 @@ onMounted(() => {
   checkJunkFiles();
 });
 watch(() => props.album.cover_path, loadCover);
+watch(() => props.album, checkJunkFiles); // Re-check junk files when album object updates (e.g. after save/apply)
 onUnmounted(() => {
   if (coverUrl.value) URL.revokeObjectURL(coverUrl.value);
 });
@@ -111,16 +112,6 @@ function cycleGenre(direction: 1 | -1) {
       <div class="aspect-square bg-gray-700 rounded-md mb-6 overflow-hidden relative group shadow-lg">
           <img v-if="coverUrl" :src="coverUrl" class="w-full h-full object-cover" />
           <div v-else class="w-full h-full flex items-center justify-center text-6xl text-gray-500">🎵</div>
-          
-          <!-- Edit Cover Overlay -->
-          <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <button 
-              @click="$emit('change-cover')"
-              class="bg-white text-gray-900 px-4 py-2 rounded-full font-medium text-sm hover:bg-gray-100 transform hover:scale-105 transition-all"
-            >
-              📷 Changer
-            </button>
-          </div>
       </div>
       
       <button 

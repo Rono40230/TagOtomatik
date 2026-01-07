@@ -161,7 +161,18 @@ impl CleanerService {
                         let is_cover = name == "cover.jpg"; // Strict case check
 
                         if !is_audio && !is_cover {
-                            // C'est un fichier inutile, on supprime
+                            // TENTATIVE DE SAUVETAGE : Si c'est "Cover.jpg", "COVER.jpg" etc., on le normalise
+                            if name.to_lowercase() == "cover.jpg" {
+                                let target_path = path.with_file_name("cover.jpg");
+                                if !target_path.exists() {
+                                    if let Ok(_) = fs::rename(&path, &target_path) {
+                                        // Renommage réussi, le fichier est sauvé
+                                        continue;
+                                    }
+                                }
+                            }
+
+                            // C'est un fichier inutile ou un doublon, on supprime
                             let _ = fs::remove_file(&path);
                         }
                     }

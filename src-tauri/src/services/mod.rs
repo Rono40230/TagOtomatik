@@ -3,6 +3,7 @@ pub mod cleaner;
 pub mod converter;
 pub mod cover;
 pub mod dictionaries;
+pub mod equalizer;
 pub mod exception;
 pub mod io;
 pub mod musicbrainz;

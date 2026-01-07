@@ -1,5 +1,5 @@
-use crate::models::{Album, AlbumStatus, AppError};
-use crate::services::{AudioService, CleanerService, RenamerService};
+use crate::models::{Album, AppError};
+use crate::services::{AudioService, CleanerService, RenamerService, ValidatorService};
 use regex::Regex;
 use std::fs;
 use std::path::Path;
@@ -139,8 +139,8 @@ pub async fn apply_auto_correct_logic(mut album: Album) -> Result<Album, AppErro
     // 5. Clean Directory (Delete junk, empty folders)
     cleaner.clean_directory(album_path);
 
-    // 6. Update Status
-    album.status = AlbumStatus::Clean;
+    // 6. Update Status (Re-validate instead of forcing Clean to check for missing playlist)
+    ValidatorService::evaluate_album_status(&mut album);
 
     Ok(album)
 }

@@ -12,7 +12,7 @@ use commands::{
     delete_exception, get_exceptions,
     history::get_scan_history,
     metadata::search_musicbrainz,
-    player::{pause_track, play_track, resume_track, set_volume, stop_track},
+    player::{pause_track, play_track, resume_track, seek_track, set_eq, set_volume, stop_track},
     playlist::{
         add_to_playlist, create_playlist, get_playlist_tracks, list_playlists, write_playlist,
     },
@@ -62,6 +62,8 @@ pub fn run() {
             resume_track,
             stop_track,
             set_volume,
+            seek_track,
+            set_eq,
             search_cover,
             download_cover,
             apply_cover,

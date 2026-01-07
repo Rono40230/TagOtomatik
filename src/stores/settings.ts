@@ -22,7 +22,7 @@ export const useSettingsStore = defineStore('settings', () => {
   });
 
   const playlist = ref<PlaylistSettings>({
-    defaultNamePattern: 'playlist.m3u',
+    defaultNamePattern: '{artist} - {album}.m3u',
     useRelativePaths: true,
     autoCreate: false,
   });

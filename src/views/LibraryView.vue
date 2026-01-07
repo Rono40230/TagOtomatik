@@ -93,7 +93,7 @@ function openSelected() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-900 text-white">
+  <div class="h-full overflow-y-auto bg-gray-900 text-white scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
     <!-- Header -->
     <header class="bg-gray-800 shadow-sm sticky top-0 z-10 border-b border-gray-700">
       <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 h-16 grid grid-cols-3 items-center">

@@ -50,10 +50,10 @@ export const useLibraryStore = defineStore('library', () => {
             if (!isAutoLoad) {
                 foundAlbums.forEach(a => {
                     if (blacklistedPaths.value.has(a.path)) {
-                        if (path === a.path || foundAlbums.length === 1) {
-                            blacklistedPaths.value.delete(a.path);
-                            restoredCount++;
-                        }
+                        // User explicitly scanned this path (or parent), so we restore ANY album found
+                        // ignoring previous deletions.
+                        blacklistedPaths.value.delete(a.path);
+                        restoredCount++;
                     }
                 });
                 if (restoredCount > 0) saveState();

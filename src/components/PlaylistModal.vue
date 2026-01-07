@@ -41,6 +41,16 @@ watch(() => props.isOpen, (newVal) => {
       .replace(/{album}/g, safeTitle)
       .replace(/{year}/g, safeYear)
     
+    // Smart cleanup: If the title itself starts with a date-like structure (e.g. "(1971-15)...")
+    // and the pattern injected the metadata year (e.g. "(2015)..."), it creates a redundant double date.
+    // We remove the injected year in this specific visual clash.
+    if (safeYear && props.album.title.trim().startsWith('(')) {
+      const yearStr = `(${safeYear}) `;
+      if (name.includes(yearStr)) {
+        name = name.replace(yearStr, '');
+      }
+    }
+
     // Remove extension from name if present, as it might be added later or confusing
     // Actually, the pattern includes extension usually. 
     // But the UI below has format selection? No, format is just m3u.

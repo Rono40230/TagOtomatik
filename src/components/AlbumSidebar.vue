@@ -2,6 +2,7 @@
 import type { Album } from '../types';
 import { computed, ref, onMounted, watch, onUnmounted } from 'vue';
 import { invoke } from '@tauri-apps/api/core';
+import { useToastStore } from '../stores/toast';
 
 const props = defineProps<{
   album: Album
@@ -14,10 +15,29 @@ const emit = defineEmits<{
   (e: 'update:genre', value: string): void
   (e: 'change-cover'): void
   (e: 'search-cover'): void
+  (e: 'cover-applied'): void
 }>();
 
 const coverUrl = ref<string | null>(null);
 const junkFiles = ref<string[]>([]);
+const isApplyingCover = ref(false);
+const toastStore = useToastStore();
+
+async function applyCoverToFiles() {
+    if (!props.album.path || !props.album.cover_path) return;
+    
+    isApplyingCover.value = true;
+    try {
+        await invoke('apply_local_cover', { albumPath: props.album.path });
+        toastStore.add("Pochette appliquée à tous les fichiers avec succès", "success");
+        emit('cover-applied');
+    } catch (e) {
+        toastStore.add("Erreur lors de l'application de la pochette : " + e, "error");
+    } finally {
+        isApplyingCover.value = false;
+    }
+}
+
 
 async function loadCover() {
   if (!props.album.cover_path) {
@@ -45,7 +65,16 @@ async function loadCover() {
 async function checkJunkFiles() {
   if (!props.album.path) return;
   try {
-    junkFiles.value = await invoke('scan_junk', { path: props.album.path });
+    // On passe le contexte complet pour que le validateur puisse reconnaître la playlist
+    // (Note: les clés doivent correspondre aux arguments de la commande Rust scan_junk en snake_case)
+    junkFiles.value = await invoke('scan_junk', { 
+        path: props.album.path,
+        artist: props.album.artist,
+        title: props.album.title,
+        year: props.album.year,
+        year_min: props.album.yearMin,
+        year_max: props.album.yearMax
+    });
   } catch (e) {
     junkFiles.value = [];
   }
@@ -116,9 +145,20 @@ function cycleGenre(direction: 1 | -1) {
       
       <button 
         @click="$emit('search-cover')"
-        class="w-full mb-6 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-sm"
+        class="w-full mb-2 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-sm"
       >
         🔍 Lancer la recherche d'une pochette
+      </button>
+      
+      <button 
+        v-if="coverUrl"
+        @click="applyCoverToFiles"
+        :disabled="isApplyingCover"
+        class="w-full mb-6 py-2 px-3 bg-gray-700 hover:bg-gray-600 text-gray-200 hover:text-white text-xs rounded-lg font-medium transition-colors flex items-center justify-center gap-2 shadow-sm border border-gray-600"
+        title="Incruster cette image dans le tag ID3 de tous les fichiers"
+      >
+        <span v-if="isApplyingCover" class="animate-pulse">Application en cours...</span>
+        <span v-else>🖼️ Appliquer aux tags des fichiers</span>
       </button>
 
       <div class="space-y-4">

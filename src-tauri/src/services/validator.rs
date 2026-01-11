@@ -1,4 +1,5 @@
-use crate::models::{Album, AlbumStatus, AppError};
+use crate::models::{Album, AlbumStatus};
+use super::InspectorService;
 use std::path::Path;
 
 pub struct ValidatorService;
@@ -35,7 +36,7 @@ impl ValidatorService {
         }
 
         if !cover_valid {
-            album.cover_path = Self::find_cover_image(Path::new(&album.path));
+            album.cover_path = InspectorService::find_cover_image(Path::new(&album.path));
         }
 
         if album.cover_path.is_none() {
@@ -44,7 +45,7 @@ impl ValidatorService {
     }
 
     fn check_playlist(album: &mut Album) {
-        album.has_playlist = Self::has_playlist(Path::new(&album.path));
+        album.has_playlist = InspectorService::has_playlist(Path::new(&album.path));
         if !album.has_playlist {
             album.issues.push("Playlist manquante".to_string());
         }
@@ -115,8 +116,23 @@ impl ValidatorService {
     }
 
     fn check_files(album: &mut Album) {
-        // Fichiers inutiles
-        if let Ok(junk) = Self::detecter_fichiers_inutiles(&album.path) {
+        // Fix for compilation year range (e.g. 1971-15) & Lifetime safety
+        let year_str = if let (Some(min), Some(max)) = (album.year_min, album.year_max) {
+             if min > 0 && max > 0 && min != max {
+                 let max_short = max % 100;
+                 format!("{}-{:02}", min, max_short)
+             } else {
+                 album.year.unwrap_or(0).to_string()
+             }
+        } else {
+             album.year.unwrap_or(0).to_string()
+        };
+
+        // Préparation du contexte pour la playlist
+        // NOTE: On passe toujours les infos même si vides pour permettre le debug dans detecter_fichiers_inutiles
+        let context_args = Some((album.artist.as_str(), year_str.as_str(), album.title.as_str()));
+
+        if let Ok(junk) = InspectorService::detecter_fichiers_inutiles(&album.path, context_args) {
             if !junk.is_empty() {
                 album.issues.push(format!(
                     "Fichiers inutiles détectés ({} fichiers)",
@@ -159,90 +175,7 @@ impl ValidatorService {
         }
     }
 
-    pub fn detecter_fichiers_inutiles(chemin_dossier: &str) -> Result<Vec<String>, AppError> {
-        let mut junk_files = Vec::new();
-        let audio_ext = ["mp3", "flac", "ogg", "m4a", "wav"];
 
-        let path = Path::new(chemin_dossier);
-        if !path.exists() || !path.is_dir() {
-            return Err(AppError::Validation("Dossier invalide".to_string()));
-        }
 
-        for entry in std::fs::read_dir(path).map_err(|e| AppError::Io(e.to_string()))? {
-            let entry = entry.map_err(|e| AppError::Io(e.to_string()))?;
-            let path = entry.path();
-            if path.is_file() {
-                let file_name = path.file_name().unwrap_or_default().to_string_lossy();
 
-                // Règle stricte : On garde uniquement les fichiers audio et "cover.jpg" (strictement minuscule)
-                let is_audio = if let Some(ext) = path.extension() {
-                    let ext_str = ext.to_string_lossy().to_lowercase();
-                    audio_ext.contains(&ext_str.as_str())
-                } else {
-                    false
-                };
-
-                // Seul "cover.jpg" est autorisé. "Cover.jpg", "COVER.jpg" etc. sont considérés comme inutiles.
-                let is_cover = file_name == "cover.jpg";
-
-                if !is_audio && !is_cover {
-                    if file_name.to_lowercase() == "cover.jpg" {
-                        junk_files.push(format!("{} (sera renommé en cover.jpg)", file_name));
-                    } else {
-                        junk_files.push(file_name.to_string());
-                    }
-                }
-            }
-        }
-        Ok(junk_files)
-    }
-
-    fn find_cover_image(path: &Path) -> Option<String> {
-        let extensions = ["jpg", "jpeg", "png", "bmp", "webp"];
-        let common_names = ["cover", "folder", "front", "album"];
-
-        // 1. Check for common names first
-        for name in common_names {
-            for ext in extensions {
-                let p = path.join(format!("{}.{}", name, ext));
-                if p.exists() {
-                    return Some(p.to_string_lossy().to_string());
-                }
-            }
-        }
-
-        // 2. If not found, scan directory for any image
-        if let Ok(entries) = std::fs::read_dir(path) {
-            for entry in entries.flatten() {
-                let p = entry.path();
-                if p.is_file() {
-                    if let Some(ext) = p.extension() {
-                        let ext_str = ext.to_string_lossy().to_lowercase();
-                        if extensions.contains(&ext_str.as_str()) {
-                            return Some(p.to_string_lossy().to_string());
-                        }
-                    }
-                }
-            }
-        }
-
-        None
-    }
-
-    fn has_playlist(path: &Path) -> bool {
-        if let Ok(entries) = std::fs::read_dir(path) {
-            for entry in entries.flatten() {
-                let p = entry.path();
-                if p.is_file() {
-                    if let Some(ext) = p.extension() {
-                        let ext_str = ext.to_string_lossy().to_lowercase();
-                        if ["m3u", "m3u8", "pls"].contains(&ext_str.as_str()) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        false
-    }
 }

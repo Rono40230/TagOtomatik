@@ -31,10 +31,15 @@ function handleError(e: unknown, toast: ReturnType<typeof useToastStore>, contex
 export function useAlbumCorrection(
     albums: Ref<Album[]>, 
     isLoading: Ref<boolean>, 
-    error: Ref<string | null>
+    error: Ref<string | null>,
+    onUpdate?: () => void
 ) {
     const originalAlbums = ref<Map<string, Album>>(new Map());
     const toast = useToastStore();
+    
+    function notifyUpdate() {
+        if (onUpdate) onUpdate();
+    }
 
     async function handleAlbumOperation<T>(
         albumId: string, 
@@ -51,6 +56,7 @@ export function useAlbumCorrection(
             const result = await operation(JSON.parse(JSON.stringify(albums.value[index])));
             onSuccess(result, index);
             toast.success(successMsg);
+            notifyUpdate();
         } catch (e) {
             error.value = handleError(e, toast, errorContext);
         } finally {
@@ -94,6 +100,7 @@ export function useAlbumCorrection(
                 albums.value[index] = JSON.parse(JSON.stringify(original));
                 originalAlbums.value.delete(albumId);
                 toast.info('Auto-correction annulée.');
+                notifyUpdate();
             }
         }
     }
@@ -143,6 +150,7 @@ export function useAlbumCorrection(
         });
         
         toast.success('Métadonnées appliquées (en attente de validation)');
+        notifyUpdate();
     }
 
     return {

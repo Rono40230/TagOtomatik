@@ -8,7 +8,7 @@ use commands::playlist::PlaylistServiceState;
 use commands::{
     add_exception, apply_auto_correct,
     converter::{convert_file, delete_file},
-    cover::{apply_cover, download_cover, read_cover, read_track_cover, search_cover},
+    cover::{apply_cover, apply_local_cover, download_cover, read_cover, read_track_cover, search_cover},
     delete_exception, get_exceptions,
     history::get_scan_history,
     metadata::search_musicbrainz,
@@ -67,6 +67,7 @@ pub fn run() {
             search_cover,
             download_cover,
             apply_cover,
+            apply_local_cover,
             list_playlists,
             get_playlist_tracks,
             create_playlist,

@@ -14,7 +14,8 @@ lazy_static! {
     static ref RE_PARENTHESES: Regex = Regex::new(r"\(.*?\)").unwrap();
 
     // Regex pour normaliser les connecteurs
-    static ref RE_FEAT: Regex = Regex::new(r"(?i)\s+(feat\.?|ft\.?|with)\s+").unwrap();
+    // Modif utilisateur: on ne touche plus à "with"
+    static ref RE_FEAT: Regex = Regex::new(r"(?i)\s+(feat\.?|ft\.?)\s+").unwrap();
     static ref RE_AND: Regex = Regex::new(r"(?i)\s+(and|et)\s+").unwrap();
 
     // Regex pour supprimer le préfixe de numéro de piste (ex: "01 - ", "1. ", "1 ")

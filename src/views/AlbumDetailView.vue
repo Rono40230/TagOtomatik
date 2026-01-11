@@ -136,6 +136,18 @@ async function confirmException(data: { original: string; corrected: string; cat
     currentExceptionProposal.value = null;
   }
 }
+
+async function handleRefresh(album: Album) {
+  try {
+    libraryStore.isLoading = true;
+    await libraryStore.refreshAlbum(album.id);
+    componentKey.value++;
+  } catch (e) {
+    toastStore.add("Erreur lors du rafraîchissement : " + e, "error");
+  } finally {
+    libraryStore.isLoading = false;
+  }
+}
 </script>
 
 <template>
@@ -169,6 +181,7 @@ async function confirmException(data: { original: string; corrected: string; cat
           @change-cover="openCoverModal(albums[0])"
           @search-cover="openCoverModal(albums[0])"
           @suggest-exception="handleExceptionSuggestion"
+          @refresh="handleRefresh(albums[0])"
         />
       </template>
     </main>

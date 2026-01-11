@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router';
 import { invoke } from '@tauri-apps/api/core';
 import ConversionModal from './ConversionModal.vue';
 import PlaylistModal from './PlaylistModal.vue';
+import { getAlbumStatusTooltip } from '../utils/albumStatus';
 
 const props = defineProps<{
   album: Album,
@@ -21,6 +22,7 @@ const router = useRouter();
 const coverUrl = ref<string | null>(null);
 const showConversionModal = ref(false);
 const showPlaylistModal = ref(false);
+const isRefreshing = ref(false);
 
 async function loadCover() {
   if (!props.album.cover_path) {
@@ -48,6 +50,14 @@ async function loadCover() {
   }
 }
 
+function handleRefresh() {
+    isRefreshing.value = true;
+    emit('refresh', props.album.id);
+    setTimeout(() => {
+        isRefreshing.value = false;
+    }, 1500);
+}
+
 onMounted(loadCover);
 watch(() => props.album.cover_path, loadCover);
 onUnmounted(() => {
@@ -69,41 +79,7 @@ const statusColor = computed(() => {
 });
 
 const statusTooltip = computed(() => {
-  if (props.album.status === 'Clean') return 'Album complet et conforme';
-  if (props.album.status === 'Processing') return 'Analyse en cours...';
-  
-  // Use backend issues if available (Source of Truth)
-  if (props.album.issues && props.album.issues.length > 0) {
-    return props.album.issues.map(i => `• ${i}`).join('\n');
-  }
-  
-  // Fallback for legacy/transition state
-  const issues: string[] = [];
-  
-  if (!props.album.cover_path) issues.push('• Cover manquante');
-  if (!props.album.has_playlist) issues.push('• Playlist manquante');
-  if (!props.album.year || props.album.year === 0) issues.push('• Année manquante');
-  
-  let missingTitles = 0;
-  let missingArtists = 0;
-  let missingAlbums = 0;
-  let missingGenres = 0;
-
-  props.album.tracks.forEach(t => {
-    if (!t.title || t.title.trim() === '') missingTitles++;
-    if (!t.artist || t.artist.trim() === '') missingArtists++;
-    if (!t.album || t.album.trim() === '') missingAlbums++;
-    if (!t.genre || t.genre.trim() === '') missingGenres++;
-  });
-
-  if (missingTitles > 0) issues.push(`• Titre manquant (${missingTitles} pistes)`);
-  if (missingArtists > 0) issues.push(`• Artiste manquant (${missingArtists} pistes)`);
-  if (missingAlbums > 0) issues.push(`• Album manquant (${missingAlbums} pistes)`);
-  if (missingGenres > 0) issues.push(`• Genre manquant (${missingGenres} pistes)`);
-  
-  if (props.album.tracks.length === 0) issues.push('• Aucune piste audio');
-
-  return issues.length > 0 ? issues.join('\n') : 'Statut inconnu';
+  return getAlbumStatusTooltip(props.album);
 });
 
 const formatBadge = computed(() => {
@@ -189,7 +165,7 @@ const displayYear = computed(() => {
         </div>
 
         <!-- Action Badges (Delete moved here) -->
-        <div class="flex flex-wrap gap-2 items-center">
+        <div class="flex flex-wrap gap-1 items-center">
             
           <!-- STATUS BADGE -->
           <div class="relative group/status">
@@ -221,20 +197,25 @@ const displayYear = computed(() => {
           <!-- Create Playlist -->
           <button 
             @click.stop="openPlaylistModal"
-            class="h-5 px-2 flex items-center justify-center text-[10px] rounded border border-blue-300 bg-blue-400 text-white hover:bg-blue-300 transition-colors font-medium"
+            class="h-5 px-2 flex items-center justify-center text-[10px] rounded border border-blue-300 bg-blue-400 text-white hover:bg-blue-300 transition-colors font-medium whitespace-nowrap"
             :class="{'!bg-green-600 !border-green-500': album.has_playlist}"
             title="Générer une playlist"
           >
-            {{ album.has_playlist ? 'Playlist OK' : 'Créer playlist' }}
+            {{ album.has_playlist ? 'Playlist OK' : 'Playlist' }}
           </button>
 
           <!-- Refresh -->
           <button 
-             @click.stop="emit('refresh', album.id)"
-             class="h-5 px-2 flex items-center justify-center text-[10px] rounded border border-blue-300 bg-blue-400 text-white hover:bg-blue-300 transition-colors font-medium"
+             @click.stop="handleRefresh"
+             class="h-5 px-2 flex items-center justify-center text-[10px] rounded border border-blue-300 bg-blue-400 text-white hover:bg-blue-300 transition-colors font-medium gap-1 whitespace-nowrap"
              title="Scanner à nouveau le dossier"
+             :disabled="isRefreshing"
           >
-            Actualiser la carte
+            <svg v-if="isRefreshing" class="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isRefreshing ? '...' : 'Actualiser' }}
           </button>
 
         </div>

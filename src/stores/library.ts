@@ -19,11 +19,15 @@ export const useLibraryStore = defineStore('library', () => {
     const error = ref<string | null>(null);
     const toast = useToastStore();
     
-    const { scannedPaths, blacklistedPaths, saveState } = useLibraryPersistence();
+    // Load state immediately to restore albums from cache
+    const { scannedPaths, blacklistedPaths, saveState, loadState } = useLibraryPersistence(albums);
+    loadState();
+    
+    // Pass saveState as callback to persist changes made during correction
     const { 
         autoCorrectAlbum, applyAutoCorrect, cancelAutoCorrect, 
         hasPendingCorrection, saveAlbum, applyMetadata
-    } = useAlbumCorrection(albums, isLoading, error);
+    } = useAlbumCorrection(albums, isLoading, error, saveState);
 
     async function scanDirectory(path: string, isAutoLoad = false) {
         if (!path) return;

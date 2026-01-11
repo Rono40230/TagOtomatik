@@ -15,6 +15,7 @@ const emit = defineEmits<{
   (e: 'change-cover'): void
   (e: 'search-cover'): void
   (e: 'suggest-exception', data: { original: string; corrected: string; category: string }): void
+  (e: 'refresh'): void
 }>();
 
 const libraryStore = useLibraryStore();
@@ -53,6 +54,7 @@ const formattedTitle = computed(() => {
       @update:genre="libraryStore.updateAlbumTracksField(album.id, 'genre', $event)"
       @change-cover="emit('change-cover')"
       @search-cover="emit('search-cover')"
+      @cover-applied="emit('refresh')"
     />
 
     <div class="flex-1 min-w-0 flex flex-col h-full">

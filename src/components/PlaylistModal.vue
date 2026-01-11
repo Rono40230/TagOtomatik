@@ -97,8 +97,13 @@ async function createPlaylist() {
     })
     
     toast.success(`Playlist créée : ${filename.value}.${format.value}`)
-    emit('refresh')
-    emit('close')
+    
+    // Attendre un court instant pour que le système de fichiers finalise l'écriture
+    // avant de demander un rafraîchissement au parent (LibraryView -> Store -> Scan)
+    setTimeout(() => {
+      emit('refresh')
+      emit('close')
+    }, 500)
   } catch (e) {
     toast.error(`Erreur création playlist: ${e}`)
   } finally {

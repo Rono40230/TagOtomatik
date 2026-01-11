@@ -76,6 +76,36 @@ pub async fn apply_cover(
 }
 
 #[tauri::command]
+pub async fn apply_local_cover(
+    album_path: String,
+) -> Result<(), String> {
+    let audio_service = AudioService::new();
+    let path = Path::new(&album_path);
+    let cover_path = path.join("cover.jpg").to_string_lossy().to_string(); // Assume cover.jpg standard
+
+    if !std::path::Path::new(&cover_path).exists() {
+         return Err("Fichier cover.jpg introuvable dans le dossier".to_string());
+    }
+
+    let supported_extensions = ["mp3", "flac", "m4a", "ogg", "wav", "aiff"];
+
+    for entry in WalkDir::new(&album_path).into_iter().filter_map(|e| e.ok()) {
+        let p = entry.path();
+        if p.is_file() {
+             if let Some(ext) = p.extension().and_then(|s| s.to_str()) {
+                if supported_extensions.contains(&ext.to_lowercase().as_str()) {
+                     // On applique la cover à tous les fichiers éligibles
+                     if let Err(e) = audio_service.definir_cover(&p.to_string_lossy(), &cover_path) {
+                          eprintln!("Failed to set cover for {:?}: {}", p, e);
+                     }
+                }
+             }
+        }
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn read_cover(path: String) -> Result<Vec<u8>, String> {
     std::fs::read(&path).map_err(|e| format!("Erreur lecture cover: {}", e))
 }

@@ -80,10 +80,10 @@ function handleMetadataSelect(release: MusicBrainzRelease) {
         <div class="flex items-center justify-start gap-4">
           <button 
             @click="goBack" 
-            class="group p-2 rounded-lg bg-gray-800/50 border border-gray-700 hover:border-cyan-500/50 hover:bg-gray-800 hover:shadow-[0_0_15px_-3px_rgba(6,182,212,0.4)] transition-all duration-300"
+            class="group p-2 rounded-lg bg-gray-700 border border-gray-600 hover:bg-gray-600"
             title="Retour"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 group-hover:text-cyan-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </button>
@@ -115,23 +115,23 @@ function handleMetadataSelect(release: MusicBrainzRelease) {
             <button 
               v-if="albums.length === 1"
               @click="isMetadataModalOpen = true"
-              class="px-4 py-2 bg-purple-900/50 text-purple-300 border border-purple-700 rounded-lg hover:bg-purple-900 font-medium text-sm transition-colors flex items-center gap-2"
+              class="px-4 py-2 bg-purple-600 text-white border border-transparent rounded-lg hover:bg-purple-500 font-medium text-sm flex items-center gap-2"
             >
               🔍 Recherche de métadonnées
             </button>
             <button 
               @click="handleAutoCorrectAll"
               :disabled="libraryStore.isLoading"
-              class="px-4 py-2 bg-blue-900/50 text-blue-300 border border-blue-700 rounded-lg hover:bg-blue-900 font-medium text-sm transition-colors flex items-center gap-2"
+              class="px-4 py-2 bg-blue-600 text-white border border-transparent rounded-lg hover:bg-blue-500 font-medium text-sm flex items-center gap-2"
             >
-              ✨ Auto-Correction (Tout)
+              ✨ Auto-Correction
             </button>
             <button 
               @click="handleSaveAll"
               :disabled="libraryStore.isLoading"
-              class="px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 font-medium text-sm transition-colors shadow-sm disabled:opacity-50"
+              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-500 font-medium text-sm shadow-sm disabled:opacity-50"
             >
-              {{ libraryStore.isLoading ? '...' : '💾 Tout Sauvegarder' }}
+              {{ libraryStore.isLoading ? '...' : '💾 Sauvegarder' }}
             </button>
           </template>
         </div>

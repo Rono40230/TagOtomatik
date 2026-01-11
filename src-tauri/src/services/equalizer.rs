@@ -217,4 +217,15 @@ where I: Source<Item = f32>
     fn channels(&self) -> u16 { self.channels }
     fn sample_rate(&self) -> u32 { self.sample_rate }
     fn total_duration(&self) -> Option<Duration> { self.input.total_duration() }
+
+    fn try_seek(&mut self, pos: Duration) -> Result<(), rodio::source::SeekError> {
+        // Reset filters on seek to prevent audio glitches
+        for ch_filters in self.filters.iter_mut() {
+            for filter in ch_filters.iter_mut() {
+                filter.z1 = 0.0;
+                filter.z2 = 0.0;
+            }
+        }
+        self.input.try_seek(pos)
+    }
 }
